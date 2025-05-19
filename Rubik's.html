@@ -1,0 +1,2340 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Rubik's cube</title>
+    <style>
+        html,
+        body {
+            height: 99%;
+        }
+
+        #outside {
+            position: relative;
+            height: 100%;
+        }
+
+        #inside {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            overflow: hidden;
+            user-select: none;
+            z-index: 1;
+        }
+
+        #Bar {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            overflow: hidden;
+            user-select: none;
+            z-index: 2;
+        }
+
+        .bar {
+            position: absolute;
+            width: 20%;
+            height: 9%;
+            background-color: rgba(242, 255, 120, 0.6);
+        }
+
+        .top_bar {
+            position: absolute;
+            width: 100%;
+            height: 50%;
+            top: 0%;
+            left: 0%;
+        }
+
+        .top_span {
+            position: absolute;
+            width: 100%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            font-size: 26px;
+            font-weight: 700;
+            font-family: monospace;
+            color: rgb(137, 7, 167);
+            letter-spacing: 6px;
+            text-indent: 6px;
+        }
+
+        .btn {
+            position: absolute;
+            height: 50%;
+            bottom: 0%;
+            left: 0%;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: monospace;
+        }
+
+        .bar2 {
+            position: absolute;
+            width: 20%;
+            height: 16%;
+            background-color: rgba(242, 255, 120, 0.6);
+        }
+
+        .top_bar2 {
+            position: absolute;
+            width: 100%;
+            height: 35%;
+            top: 0%;
+            left: 0%;
+        }
+
+        .down_bar {
+            position: absolute;
+            height: 65%;
+            width: 100%;
+            bottom: 0%;
+            overflow-y: hidden;
+            overflow-x: auto;
+        }
+
+        .down_bar1 {
+            position: absolute;
+            height: 100%;
+        }
+
+        .btn1 {
+            position: absolute;
+            height: 100%;
+            top: 0%;
+            width: 60px;
+            border: 1px black solid;
+        }
+
+        .btn2 {
+            position: absolute;
+            height: 80%;
+            width: 80%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .speed_span {
+            position: absolute;
+            width: 96%;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 22px;
+            font-weight: 700;
+            font-family: monospace;
+            color: rgb(127, 15, 15);
+        }
+
+        #speed_range {
+            position: absolute;
+            width: 70%;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #random {
+            position: absolute;
+            height: 6%;
+            width: 16%;
+            top: 1.5%;
+            left: 30%;
+            border-radius: 8px;
+            font-size: 22px;
+            font-weight: 600;
+            font-family: monospace;
+        }
+
+        #recovery {
+            position: absolute;
+            height: 6%;
+            width: 16%;
+            top: 1.5%;
+            right: 30%;
+            border-radius: 8px;
+            font-size: 22px;
+            font-weight: 600;
+            font-family: monospace;
+        }
+
+        #hint_bar {
+            position: absolute;
+            width: 40%;
+            height: 8.5%;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 12px;
+            border: 2px solid rgb(255, 167, 167);
+        }
+
+        #hint_span {
+            position: absolute;
+            width: 100%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            font-size: 26px;
+            font-weight: 700;
+            font-family: monospace;
+            color: white;
+        }
+
+        #action_bar {
+            position: absolute;
+            width: 24%;
+            height: 9%;
+            bottom: 1.5%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 1px white solid;
+            border-radius: 10px;
+        }
+
+        #start {
+            position: absolute;
+            width: 40%;
+            height: 80%;
+            top: 10%;
+            left: 5%;
+            border-radius: 8px;
+            font-size: 22px;
+            font-weight: 600;
+            font-family: monospace;
+        }
+
+        #next {
+            position: absolute;
+            width: 40%;
+            height: 80%;
+            top: 10%;
+            right: 5%;
+            border-radius: 8px;
+            font-size: 22px;
+            font-weight: 600;
+            font-family: monospace;
+        }
+
+        .btn1:hover,
+        input[type="button"]:hover {
+            background-color: rgb(186, 255, 242);
+            transition: 0.4s;
+        }
+    </style>
+    <script src="./three.js"></script>
+    <script>
+        var ready = false;
+        var inside = null;
+        var bar = null;
+        var scene = null;
+        var renderer = null;
+        var camera = null;
+
+        var speed;
+
+        var mesh = new Array(27);
+
+        var position = [
+            -10, 10, -10, 0, 10, -10, 10, 10, -10,
+            -10, 10, 0, 0, 10, 0, 10, 10, 0,
+            -10, 10, 10, 0, 10, 10, 10, 10, 10,
+            -10, 0, -10, 0, 0, -10, 10, 0, -10,
+            -10, 0, 0, 0, 0, 0, 10, 0, 0,
+            -10, 0, 10, 0, 0, 10, 10, 0, 10,
+            -10, -10, -10, 0, -10, -10, 10, -10, -10,
+            -10, -10, 0, 0, -10, 0, 10, -10, 0,
+            -10, -10, 10, 0, -10, 10, 10, -10, 10
+        ];
+
+        var Arr_color = [
+            [{ t: 0, c: 0 }, { t: 3, c: 3 }, { t: 4, c: 4 }], [{ t: 0, c: 0 }, { t: 3, c: 3 }], [{ t: 0, c: 0 }, { t: 3, c: 3 }, { t: 2, c: 2 }],
+            [{ t: 0, c: 0 }, { t: 4, c: 4 }], [{ t: 0, c: 0 }], [{ t: 0, c: 0 }, { t: 2, c: 2 }],
+            [{ t: 0, c: 0 }, { t: 1, c: 1 }, { t: 4, c: 4 }], [{ t: 0, c: 0 }, { t: 1, c: 1 }], [{ t: 0, c: 0 }, { t: 1, c: 1 }, { t: 2, c: 2 }],
+            [{ t: 3, c: 3 }, { t: 4, c: 4 }], [{ t: 3, c: 3 }], [{ t: 3, c: 3 }, { t: 2, c: 2 }],
+            [{ t: 4, c: 4 }], [], [{ t: 2, c: 2 }],
+            [{ t: 1, c: 1 }, { t: 4, c: 4 }], [{ t: 1, c: 1 }], [{ t: 1, c: 1 }, { t: 2, c: 2 }],
+            [{ t: 5, c: 5 }, { t: 3, c: 3 }, { t: 4, c: 4 }], [{ t: 5, c: 5 }, { t: 3, c: 3 }], [{ t: 5, c: 5 }, { t: 3, c: 3 }, { t: 2, c: 2 }],
+            [{ t: 5, c: 5 }, { t: 4, c: 4 }], [{ t: 5, c: 5 }], [{ t: 5, c: 5 }, { t: 2, c: 2 }],
+            [{ t: 5, c: 5 }, { t: 1, c: 1 }, { t: 4, c: 4 }], [{ t: 5, c: 5 }, { t: 1, c: 1 }], [{ t: 5, c: 5 }, { t: 1, c: 1 }, { t: 2, c: 2 }],
+        ];
+
+        var formula = [
+            [
+                [6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 3, 4, 3, 3, 2, 4,
+                    2, 1, 4, 1, 1, 2, 5, 3, 4, 5, 3, 5, 3, 2, 5, 4, 5, 5, 2, 5, 1, 4, 5, 1, 5, 1, 2],
+                ["U", "R", "U'", "R'"],
+                ["F", "R'", "F'", "R"],
+                ["F'", "U'", "F"],
+                ["R", "U", "R'"],
+                ["U'", "R", "U", "R'", "U2", "R", "U'", "R'"],
+                ["R'", "U'", "R", "U2", "R'", "U", "R", "y"],
+                ["U'", "R", "U2", "R'", "U2", "R", "U'", "R'"],
+                ["y'", "U", "R'", "U2", "R", "U2", "R'", "U", "R", "y"],
+                ["y'", "U2", "R'", "U", "R", "U", "R'", "U'", "R", "y"],
+                ["U2", "R", "U'", "R'", "U'", "R", "U", "R'"],
+                ["U'", "R", "U2", "R'", "y'", "U", "R'", "U'", "R", "y"],
+                ["y'", "U", "R'", "U2", "R", "y", "U'", "R", "U", "R'"],
+                ["y'", "U", "R'", "U", "R", "U'", "R'", "U'", "R", "y"],
+                ["U'", "R", "U'", "R'", "U", "R", "U", "R'"],
+                ["R", "U", "R'", "U2", "R", "U'", "R'", "U", "R", "U'", "R'"],
+                ["R", "U'", "R'", "U2", "y'", "R'", "U'", "R", "y"],
+                ["R", "U2", "R'", "U'", "R", "U", "R'"],
+                ["y'", "R'", "U2", "R", "U", "R'", "U'", "R", "y"],
+                ["U", "R", "U2", "R'", "U", "R", "U'", "R'"],
+                ["y'", "U'", "R'", "U2", "R", "U'", "R'", "U", "R", "y"],
+                ["U2", "R", "U", "R'", "U", "R", "U'", "R'"],
+                ["R'", "U'", "R", "U'", "R'", "U", "R", "y"],
+                ["U", "R", "U'", "R'", "U'", "R", "U'", "R'", "U", "R", "U'", "R'"],
+                ["y", "U'", "L'", "U", "L", "U", "L'", "U", "L", "U'", "L'", "U", "L", "y'"],
+                ["R'", "F'", "R", "U", "R", "U'", "R'", "F"],
+                ["U", "R", "U'", "R'", "F", "R'", "F'", "R"],
+                ["R", "U'", "R'", "U", "R", "U'", "R'"],
+                ["y", "L'", "U", "L", "U'", "L'", "U", "L", "y'"],
+                ["y'", "R'", "U'", "R", "U", "R'", "U'", "R", "y"],
+                ["R", "U", "R'", "U'", "R", "U", "R'"],
+                ["R", "U'", "R'", "U", "y'", "R'", "U", "R", "y"],
+                ["U", "R", "U'", "R'", "U", "R", "U'", "R'", "U", "R", "U'", "R'"],
+                ["U'", "R", "U'", "R'", "U2", "R", "U'", "R'"],
+                ["U", "R", "U", "R'", "U2", "R", "U", "R'"],
+                ["U'", "R", "U", "R'", "y'", "U", "R'", "U'", "R", "y"],
+                ["y'", "U", "R'", "U'", "R", "y", "U'", "R", "U", "R'"],
+                ["R", "U'", "R'", "y'", "U", "R'", "U2", "R", "U", "R'", "U2", "R", "y"],
+                ["R", "U'", "R'", "U'", "R", "U", "R'", "U2", "R", "U'", "R'"],
+                ["R", "U2", "R'", "U", "R", "U'", "R'", "U", "R", "U", "R'"],
+                ["R", "U'", "R'", "U'", "R", "U'", "R'", "y'", "U", "R'", "U'", "R", "y"],
+                ["R", "U'", "R'", "U", "y'", "U", "R'", "U'", "R", "U'", "R'", "U", "R", "y"]
+            ],
+            [
+                [0, 6, 6, 0, 6, 0, 6, 6, 0, 6, 0, 0, 6, 0, 6, 6, 0, 6, 0, 6, 6, 3, 4, 3, 3, 2, 4,
+                    2, 1, 4, 1, 1, 2, 5, 3, 4, 5, 3, 5, 3, 2, 5, 4, 5, 5, 2, 5, 1, 4, 5, 1, 5, 1, 2],
+                ["R", "U2", "R2", "F", "R", "F'", "U2", "R'", "F", "R", "F'"],
+                ["F", "R", "U", "R'", "U'", "S", "R", "U", "R'", "U'", "Fw'"],
+                ["R'", "U'", "F'", "U", "F", "R", "F", "R", "U", "R'", "U'", "F'"],
+                ["F", "U", "R", "U'", "R'", "F'", "R'", "F'", "U'", "F", "U", "R"],
+                ["Rw'", "U2", "R", "U", "R'", "U", "Rw"],
+                ["Rw", "U2", "R'", "U'", "R", "U'", "Rw'"],
+                ["Rw", "U", "R'", "U", "R", "U2", "Rw'"],
+                ["Rw'", "U'", "R", "U'", "R'", "U2", "Rw"],
+                ["R", "U", "R'", "U'", "R'", "F", "R2", "U", "R'", "U'", "F'"],
+                ["R", "U", "R'", "y", "R'", "F", "R", "U'", "R'", "F'", "R", "y'"],
+                ["Rw'", "R2", "U", "R'", "U", "R", "U2", "R'", "U", "M'"],
+                ["R2", "Rw", "U'", "R", "U'", "R'", "U2", "R", "U'", "M"],
+                ["F", "U", "R", "U'", "R2", "F'", "R", "U", "R", "U'", "R'"],
+                ["R'", "F", "R", "U", "R'", "F'", "R", "y'", "R", "U'", "R'", "y"],
+                ["R'", "F'", "R", "L'", "U'", "L", "U", "R'", "F", "R"],
+                ["Rw", "U", "M", "U", "R'", "U'", "Rw", "U'", "Rw'"],
+                ["R'", "U'", "F'", "U", "F", "R2", "U", "R'", "U'", "R'", "F", "R", "F'"],
+                ["R", "U2", "R2", "F", "R", "F'", "U2", "M'", "U", "R", "U'", "Rw'"],
+                ["F", "R'", "F'", "R", "U", "R", "U'", "R2", "F'", "U'", "F", "U", "R"],
+                ["Rw", "U", "R'", "U'", "M2", "U", "R", "U'", "R'", "U'", "M'"],
+                ["R", "U2", "R'", "U'", "R", "U", "R'", "U'", "R", "U'", "R'"],
+                ["R", "U2", "R2", "U'", "R2", "U'", "R2", "U2", "R"],
+                ["R2", "D'", "R", "U2", "R'", "D", "R", "U2", "R"],
+                ["R'", "U'", "R'", "D'", "R", "U", "R'", "D", "R2"],
+                ["x'", "R", "U'", "R'", "D", "R", "U", "R'", "D'", "x"],
+                ["R'", "U'", "R", "U'", "R'", "U2", "R"],
+                ["R", "U", "R'", "U", "R", "U2", "R'"],
+                ["Rw", "U", "R'", "U'", "M", "U", "R", "U'", "R'"],
+                ["R", "U", "R'", "U'", "R", "U'", "R'", "F'", "U'", "F", "R", "U", "R'"],
+                ["F", "R'", "F", "R2", "U'", "R'", "U'", "R", "U", "R'", "F2"],
+                ["R'", "U'", "F", "U", "R", "U'", "R'", "F'", "R"],
+                ["R", "U2", "R'", "U'", "F'", "U", "F", "R", "U'", "R'"],
+                ["R", "U", "R'", "U'", "R'", "F", "R", "F'"],
+                ["R'", "U'", "R", "y", "U", "Rw", "U", "R'", "U'", "M", "y'"],
+                ["R", "U2", "R2", "F", "R", "F'", "R", "U2", "R'"],
+                ["R'", "U'", "R", "U'", "R'", "U", "R", "U", "Lw", "U'", "R'", "U", "x"],
+                ["F", "R", "U'", "R'", "U'", "R", "U", "R'", "F'"],
+                ["R", "U", "R'", "U", "R", "U'", "R'", "U'", "R'", "F", "R", "F'"],
+                ["R", "U", "R'", "F'", "U'", "F", "U", "R", "U2", "R'"],
+                ["R'", "F", "R", "U", "R'", "U'", "F'", "U", "R"],
+                ["R", "U", "R'", "U", "R", "U2", "R'", "F", "R", "U", "R'", "U'", "F'"],
+                ["R'", "U'", "R", "U'", "R'", "U2", "R", "F", "R", "U", "R'", "U'", "F'"],
+                ["R'", "U'", "F'", "U", "F", "R"],
+                ["F", "U", "R", "U'", "R'", "F'"],
+                ["F", "R", "U", "R'", "U'", "F'"],
+                ["R'", "U'", "R'", "F", "R", "F'", "U", "R"],
+                ["R'", "U'", "Lw'", "U", "R", "U'", "R'", "U", "R", "U'", "x'", "U", "R"],
+                ["F", "R", "U", "R'", "U'", "R", "U", "R'", "U'", "F'"],
+                ["Rw", "U'", "Rw2", "U", "Rw2", "U", "Rw2", "U'", "Rw"],
+                ["Rw'", "U", "Rw2", "U'", "Rw2", "U'", "Rw2", "U", "Rw'"],
+                ["F", "U", "R", "U'", "R'", "U", "R", "U'", "R'", "F'"],
+                ["R'", "F'", "U'", "F", "U'", "R", "U", "R'", "U", "R"],
+                ["Rw'", "U2", "R", "U", "R'", "U'", "R", "U", "R'", "U", "Rw"],
+                ["Rw", "U2", "R'", "U'", "R", "U", "R'", "U'", "R", "U'", "Rw'"],
+                ["R'", "F", "R", "U", "R", "U'", "R2", "F'", "R2", "U'", "R'", "U", "R", "U", "R'"],
+                ["Rw", "U", "Rw'", "U", "R", "U'", "R'", "U", "R", "U'", "M'", "U'", "Rw'"],
+                ["R", "U", "R'", "U'", "M'", "U", "R", "U'", "Rw'"]
+            ],
+            [
+                [0, 3, 4, 0, 3, 0, 3, 2, 0, 4, 0, 0, 2, 0, 1, 4, 0, 1, 0, 1, 2, 3, 4, 3, 3, 2, 4,
+                    2, 1, 4, 1, 1, 2, 5, 3, 4, 5, 3, 5, 3, 2, 5, 4, 5, 5, 2, 5, 1, 4, 5, 1, 5, 1, 2],
+                ["x", "R'", "U", "R'", "D2", "R", "U'", "R'", "D2", "R2", "x'"],
+                ["x", "R2", "D2", "R", "U", "R'", "D2", "R", "U'", "R", "x'"],
+                ["x'", "R", "U'", "R'", "D", "R", "U", "R'", "D'", "R", "U", "R'", "D", "R", "U'", "R'", "D'", "x"],
+                ["R'", "U'", "F'", "R", "U", "R'", "U'", "R'", "F", "R2", "U'", "R'", "U'", "R", "U", "R'", "U", "R"],
+                ["R2", "U", "R'", "U", "R'", "U'", "R", "U'", "R2", "D", "U'", "R'", "U", "R", "D'", "U"],
+                ["R'", "U'", "R", "U", "D'", "R2", "U", "R'", "U", "R", "U'", "R", "U'", "R2", "D", "U'"],
+                ["R2", "F2", "R", "U2", "R", "U2", "R'", "F", "R", "U", "R'", "U'", "R'", "F", "R2"],
+                ["R", "U", "R'", "U'", "D", "R2", "U'", "R", "U'", "R'", "U", "R'", "U", "R2", "U", "D'"],
+                ["M2", "U", "M2", "U2", "M2", "U", "M2"],
+                ["R'", "U", "L'", "U2", "R", "U'", "R'", "U2", "R", "L", "U'"],
+                ["R", "U", "R'", "F'", "R", "U", "R'", "U'", "R'", "F", "R2", "U'", "R'", "U'"],
+                ["R", "U", "R'", "U", "R", "U", "R'", "F'", "R", "U", "R'", "U'", "R'", "F", "R2", "U'", "R'", "U2", "R", "U'", "R'"],
+                ["R'", "U", "L'", "U2", "R", "U'", "R'", "L", "U", "L'", "U2", "R", "U'", "L", "U"],
+                ["R", "U'", "R'", "U'", "R", "U", "R", "D", "R'", "U'", "R", "D'", "R'", "U2", "R'", "U'"],
+                ["R'", "U2", "R'", "D'", "R", "U'", "R'", "D", "R", "U", "R", "U'", "R'", "U'", "R", "U'"],
+                ["R", "U", "R'", "U'", "R'", "F", "R2", "U'", "R'", "U'", "R", "U", "R'", "F'"],
+                ["M2", "U", "M", "U2", "M'", "U", "M2"],
+                ["R2", "U", "R", "U", "R'", "U'", "R'", "U'", "R'", "U", "R'"],
+                ["R'", "U", "R'", "Dw'", "R'", "F'", "R2", "U'", "R'", "U", "R'", "F", "R", "F"],
+                ["F", "R", "U'", "R'", "U'", "R", "U", "R'", "F'", "R", "U", "R'", "U'", "R'", "F", "R", "F'"],
+                ["M2", "U", "M2", "U", "M'", "U2", "M2", "U2", "M'", "U2"]
+            ]
+        ];
+
+        var _U_ = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+        var _F_ = [[1, 1, 1], [1, 1, 1], [1, 1, 1]];
+        var _R_ = [[2, 2, 2], [2, 2, 2], [2, 2, 2]];
+        var _B_ = [[3, 3, 3], [3, 3, 3], [3, 3, 3]];
+        var _L_ = [[4, 4, 4], [4, 4, 4], [4, 4, 4]];
+        var _D_ = [[5, 5, 5], [5, 5, 5], [5, 5, 5]];
+
+        var code = ["U", "U'", "U2", "D", "D'", "D2", "L", "L'", "L2", "R", "R'", "R2", "F", "F'", "F2", "B", "B'", "B2"];
+
+        function move_all(s) {
+            if (s == "U") {
+                var temp = Arr_color[0][0].c;
+                Arr_color[0][0].c = Arr_color[6][0].c; Arr_color[6][0].c = Arr_color[8][0].c;
+                Arr_color[8][0].c = Arr_color[2][0].c; Arr_color[2][0].c = temp; temp = Arr_color[1][0].c;
+                Arr_color[1][0].c = Arr_color[3][0].c; Arr_color[3][0].c = Arr_color[7][0].c;
+                Arr_color[7][0].c = Arr_color[5][0].c; Arr_color[5][0].c = temp; temp = Arr_color[0][1].c;
+                Arr_color[0][1].c = Arr_color[6][2].c; Arr_color[6][2].c = Arr_color[8][1].c;
+                Arr_color[8][1].c = Arr_color[2][2].c; Arr_color[2][2].c = temp; temp = Arr_color[0][2].c;
+                Arr_color[0][2].c = Arr_color[6][1].c; Arr_color[6][1].c = Arr_color[8][2].c;
+                Arr_color[8][2].c = Arr_color[2][1].c; Arr_color[2][1].c = temp; temp = Arr_color[1][1].c;
+                Arr_color[1][1].c = Arr_color[3][1].c; Arr_color[3][1].c = Arr_color[7][1].c;
+                Arr_color[7][1].c = Arr_color[5][1].c; Arr_color[5][1].c = temp;
+            }
+            else if (s == "U'") {
+                var temp = Arr_color[0][0].c;
+                Arr_color[0][0].c = Arr_color[2][0].c; Arr_color[2][0].c = Arr_color[8][0].c;
+                Arr_color[8][0].c = Arr_color[6][0].c; Arr_color[6][0].c = temp; temp = Arr_color[1][0].c;
+                Arr_color[1][0].c = Arr_color[5][0].c; Arr_color[5][0].c = Arr_color[7][0].c;
+                Arr_color[7][0].c = Arr_color[3][0].c; Arr_color[3][0].c = temp; temp = Arr_color[0][1].c;
+                Arr_color[0][1].c = Arr_color[2][2].c; Arr_color[2][2].c = Arr_color[8][1].c;
+                Arr_color[8][1].c = Arr_color[6][2].c; Arr_color[6][2].c = temp; temp = Arr_color[0][2].c;
+                Arr_color[0][2].c = Arr_color[2][1].c; Arr_color[2][1].c = Arr_color[8][2].c;
+                Arr_color[8][2].c = Arr_color[6][1].c; Arr_color[6][1].c = temp; temp = Arr_color[1][1].c;
+                Arr_color[1][1].c = Arr_color[5][1].c; Arr_color[5][1].c = Arr_color[7][1].c;
+                Arr_color[7][1].c = Arr_color[3][1].c; Arr_color[3][1].c = temp;
+            }
+            else if (s == "R") {
+                var temp = Arr_color[2][2].c;
+                Arr_color[2][2].c = Arr_color[8][2].c; Arr_color[8][2].c = Arr_color[26][2].c;
+                Arr_color[26][2].c = Arr_color[20][2].c; Arr_color[20][2].c = temp; temp = Arr_color[5][1].c;
+                Arr_color[5][1].c = Arr_color[17][1].c; Arr_color[17][1].c = Arr_color[23][1].c;
+                Arr_color[23][1].c = Arr_color[11][1].c; Arr_color[11][1].c = temp; temp = Arr_color[2][0].c;
+                Arr_color[2][0].c = Arr_color[8][1].c; Arr_color[8][1].c = Arr_color[26][0].c;
+                Arr_color[26][0].c = Arr_color[20][1].c; Arr_color[20][1].c = temp; temp = Arr_color[2][1].c;
+                Arr_color[2][1].c = Arr_color[8][0].c; Arr_color[8][0].c = Arr_color[26][1].c;
+                Arr_color[26][1].c = Arr_color[20][0].c; Arr_color[20][0].c = temp; temp = Arr_color[5][0].c;
+                Arr_color[5][0].c = Arr_color[17][0].c; Arr_color[17][0].c = Arr_color[23][0].c;
+                Arr_color[23][0].c = Arr_color[11][0].c; Arr_color[11][0].c = temp;
+            }
+            else if (s == "R'") {
+                var temp = Arr_color[2][2].c;
+                Arr_color[2][2].c = Arr_color[20][2].c; Arr_color[20][2].c = Arr_color[26][2].c;
+                Arr_color[26][2].c = Arr_color[8][2].c; Arr_color[8][2].c = temp; temp = Arr_color[5][1].c;
+                Arr_color[5][1].c = Arr_color[11][1].c; Arr_color[11][1].c = Arr_color[23][1].c;
+                Arr_color[23][1].c = Arr_color[17][1].c; Arr_color[17][1].c = temp; temp = Arr_color[2][0].c;
+                Arr_color[2][0].c = Arr_color[20][1].c; Arr_color[20][1].c = Arr_color[26][0].c;
+                Arr_color[26][0].c = Arr_color[8][1].c; Arr_color[8][1].c = temp; temp = Arr_color[2][1].c;
+                Arr_color[2][1].c = Arr_color[20][0].c; Arr_color[20][0].c = Arr_color[26][1].c;
+                Arr_color[26][1].c = Arr_color[8][0].c; Arr_color[8][0].c = temp; temp = Arr_color[5][0].c;
+                Arr_color[5][0].c = Arr_color[11][0].c; Arr_color[11][0].c = Arr_color[23][0].c;
+                Arr_color[23][0].c = Arr_color[17][0].c; Arr_color[17][0].c = temp;
+            }
+            else if (s == "L") {
+                var temp = Arr_color[0][2].c;
+                Arr_color[0][2].c = Arr_color[18][2].c; Arr_color[18][2].c = Arr_color[24][2].c;
+                Arr_color[24][2].c = Arr_color[6][2].c; Arr_color[6][2].c = temp; temp = Arr_color[3][1].c;
+                Arr_color[3][1].c = Arr_color[9][1].c; Arr_color[9][1].c = Arr_color[21][1].c;
+                Arr_color[21][1].c = Arr_color[15][1].c; Arr_color[15][1].c = temp; temp = Arr_color[0][0].c;
+                Arr_color[0][0].c = Arr_color[18][1].c; Arr_color[18][1].c = Arr_color[24][0].c;
+                Arr_color[24][0].c = Arr_color[6][1].c; Arr_color[6][1].c = temp; temp = Arr_color[0][1].c;
+                Arr_color[0][1].c = Arr_color[18][0].c; Arr_color[18][0].c = Arr_color[24][1].c;
+                Arr_color[24][1].c = Arr_color[6][0].c; Arr_color[6][0].c = temp; temp = Arr_color[3][0].c;
+                Arr_color[3][0].c = Arr_color[9][0].c; Arr_color[9][0].c = Arr_color[21][0].c;
+                Arr_color[21][0].c = Arr_color[15][0].c; Arr_color[15][0].c = temp;
+            }
+            else if (s == "L'") {
+                var temp = Arr_color[0][2].c;
+                Arr_color[0][2].c = Arr_color[6][2].c; Arr_color[6][2].c = Arr_color[24][2].c;
+                Arr_color[24][2].c = Arr_color[18][2].c; Arr_color[18][2].c = temp; temp = Arr_color[3][1].c;
+                Arr_color[3][1].c = Arr_color[15][1].c; Arr_color[15][1].c = Arr_color[21][1].c;
+                Arr_color[21][1].c = Arr_color[9][1].c; Arr_color[9][1].c = temp; temp = Arr_color[0][0].c;
+                Arr_color[0][0].c = Arr_color[6][1].c; Arr_color[6][1].c = Arr_color[24][0].c;
+                Arr_color[24][0].c = Arr_color[18][1].c; Arr_color[18][1].c = temp; temp = Arr_color[0][1].c;
+                Arr_color[0][1].c = Arr_color[6][0].c; Arr_color[6][0].c = Arr_color[24][1].c;
+                Arr_color[24][1].c = Arr_color[18][0].c; Arr_color[18][0].c = temp; temp = Arr_color[3][0].c;
+                Arr_color[3][0].c = Arr_color[15][0].c; Arr_color[15][0].c = Arr_color[21][0].c;
+                Arr_color[21][0].c = Arr_color[9][0].c; Arr_color[9][0].c = temp;
+            }
+            else if (s == "D") {
+                var temp = Arr_color[18][0].c;
+                Arr_color[18][0].c = Arr_color[20][0].c; Arr_color[20][0].c = Arr_color[26][0].c;
+                Arr_color[26][0].c = Arr_color[24][0].c; Arr_color[24][0].c = temp; temp = Arr_color[19][0].c;
+                Arr_color[19][0].c = Arr_color[23][0].c; Arr_color[23][0].c = Arr_color[25][0].c;
+                Arr_color[25][0].c = Arr_color[21][0].c; Arr_color[21][0].c = temp; temp = Arr_color[18][1].c;
+                Arr_color[18][1].c = Arr_color[20][2].c; Arr_color[20][2].c = Arr_color[26][1].c;
+                Arr_color[26][1].c = Arr_color[24][2].c; Arr_color[24][2].c = temp; temp = Arr_color[18][2].c;
+                Arr_color[18][2].c = Arr_color[20][1].c; Arr_color[20][1].c = Arr_color[26][2].c;
+                Arr_color[26][2].c = Arr_color[24][1].c; Arr_color[24][1].c = temp; temp = Arr_color[19][1].c;
+                Arr_color[19][1].c = Arr_color[23][1].c; Arr_color[23][1].c = Arr_color[25][1].c;
+                Arr_color[25][1].c = Arr_color[21][1].c; Arr_color[21][1].c = temp;
+            }
+            else if (s == "D'") {
+                var temp = Arr_color[18][0].c;
+                Arr_color[18][0].c = Arr_color[24][0].c; Arr_color[24][0].c = Arr_color[26][0].c;
+                Arr_color[26][0].c = Arr_color[20][0].c; Arr_color[20][0].c = temp; temp = Arr_color[19][0].c;
+                Arr_color[19][0].c = Arr_color[21][0].c; Arr_color[21][0].c = Arr_color[25][0].c;
+                Arr_color[25][0].c = Arr_color[23][0].c; Arr_color[23][0].c = temp; temp = Arr_color[18][1].c;
+                Arr_color[18][1].c = Arr_color[24][2].c; Arr_color[24][2].c = Arr_color[26][1].c;
+                Arr_color[26][1].c = Arr_color[20][2].c; Arr_color[20][2].c = temp; temp = Arr_color[18][2].c;
+                Arr_color[18][2].c = Arr_color[24][1].c; Arr_color[24][1].c = Arr_color[26][2].c;
+                Arr_color[26][2].c = Arr_color[20][1].c; Arr_color[20][1].c = temp; temp = Arr_color[19][1].c;
+                Arr_color[19][1].c = Arr_color[21][1].c; Arr_color[21][1].c = Arr_color[25][1].c;
+                Arr_color[25][1].c = Arr_color[23][1].c; Arr_color[23][1].c = temp;
+            }
+            else if (s == "F") {
+                var temp = Arr_color[6][1].c;
+                Arr_color[6][1].c = Arr_color[24][1].c; Arr_color[24][1].c = Arr_color[26][1].c;
+                Arr_color[26][1].c = Arr_color[8][1].c; Arr_color[8][1].c = temp; temp = Arr_color[7][1].c;
+                Arr_color[7][1].c = Arr_color[15][0].c; Arr_color[15][0].c = Arr_color[25][1].c;
+                Arr_color[25][1].c = Arr_color[17][0].c; Arr_color[17][0].c = temp; temp = Arr_color[6][0].c;
+                Arr_color[6][0].c = Arr_color[24][2].c; Arr_color[24][2].c = Arr_color[26][0].c;
+                Arr_color[26][0].c = Arr_color[8][2].c; Arr_color[8][2].c = temp; temp = Arr_color[6][2].c;
+                Arr_color[6][2].c = Arr_color[24][0].c; Arr_color[24][0].c = Arr_color[26][2].c;
+                Arr_color[26][2].c = Arr_color[8][0].c; Arr_color[8][0].c = temp; temp = Arr_color[7][0].c;
+                Arr_color[7][0].c = Arr_color[15][1].c; Arr_color[15][1].c = Arr_color[25][0].c;
+                Arr_color[25][0].c = Arr_color[17][1].c; Arr_color[17][1].c = temp;
+            }
+            else if (s == "F'") {
+                var temp = Arr_color[6][1].c;
+                Arr_color[6][1].c = Arr_color[8][1].c; Arr_color[8][1].c = Arr_color[26][1].c;
+                Arr_color[26][1].c = Arr_color[24][1].c; Arr_color[24][1].c = temp; temp = Arr_color[7][1].c;
+                Arr_color[7][1].c = Arr_color[17][0].c; Arr_color[17][0].c = Arr_color[25][1].c;
+                Arr_color[25][1].c = Arr_color[15][0].c; Arr_color[15][0].c = temp; temp = Arr_color[6][0].c;
+                Arr_color[6][0].c = Arr_color[8][2].c; Arr_color[8][2].c = Arr_color[26][0].c;
+                Arr_color[26][0].c = Arr_color[24][2].c; Arr_color[24][2].c = temp; temp = Arr_color[6][2].c;
+                Arr_color[6][2].c = Arr_color[8][0].c; Arr_color[8][0].c = Arr_color[26][2].c;
+                Arr_color[26][2].c = Arr_color[24][0].c; Arr_color[24][0].c = temp; temp = Arr_color[7][0].c;
+                Arr_color[7][0].c = Arr_color[17][1].c; Arr_color[17][1].c = Arr_color[25][0].c;
+                Arr_color[25][0].c = Arr_color[15][1].c; Arr_color[15][1].c = temp;
+            }
+            else if (s == "B") {
+                var temp = Arr_color[0][1].c;
+                Arr_color[0][1].c = Arr_color[2][1].c; Arr_color[2][1].c = Arr_color[20][1].c;
+                Arr_color[20][1].c = Arr_color[18][1].c; Arr_color[18][1].c = temp; temp = Arr_color[1][1].c;
+                Arr_color[1][1].c = Arr_color[11][0].c; Arr_color[11][0].c = Arr_color[19][1].c;
+                Arr_color[19][1].c = Arr_color[9][0].c; Arr_color[9][0].c = temp; temp = Arr_color[0][0].c;
+                Arr_color[0][0].c = Arr_color[2][2].c; Arr_color[2][2].c = Arr_color[20][0].c;
+                Arr_color[20][0].c = Arr_color[18][2].c; Arr_color[18][2].c = temp; temp = Arr_color[0][2].c;
+                Arr_color[0][2].c = Arr_color[2][0].c; Arr_color[2][0].c = Arr_color[20][2].c;
+                Arr_color[20][2].c = Arr_color[18][0].c; Arr_color[18][0].c = temp; temp = Arr_color[1][0].c;
+                Arr_color[1][0].c = Arr_color[11][1].c; Arr_color[11][1].c = Arr_color[19][0].c;
+                Arr_color[19][0].c = Arr_color[9][1].c; Arr_color[9][1].c = temp;
+            }
+            else if (s == "B'") {
+                var temp = Arr_color[0][1].c;
+                Arr_color[0][1].c = Arr_color[18][1].c; Arr_color[18][1].c = Arr_color[20][1].c;
+                Arr_color[20][1].c = Arr_color[2][1].c; Arr_color[2][1].c = temp; temp = Arr_color[1][1].c;
+                Arr_color[1][1].c = Arr_color[9][0].c; Arr_color[9][0].c = Arr_color[19][1].c;
+                Arr_color[19][1].c = Arr_color[11][0].c; Arr_color[11][0].c = temp; temp = Arr_color[0][0].c;
+                Arr_color[0][0].c = Arr_color[18][2].c; Arr_color[18][2].c = Arr_color[20][0].c;
+                Arr_color[20][0].c = Arr_color[2][2].c; Arr_color[2][2].c = temp; temp = Arr_color[0][2].c;
+                Arr_color[0][2].c = Arr_color[18][0].c; Arr_color[18][0].c = Arr_color[20][2].c;
+                Arr_color[20][2].c = Arr_color[2][0].c; Arr_color[2][0].c = temp; temp = Arr_color[1][0].c;
+                Arr_color[1][0].c = Arr_color[9][1].c; Arr_color[9][1].c = Arr_color[19][0].c;
+                Arr_color[19][0].c = Arr_color[11][1].c; Arr_color[11][1].c = temp;
+            }
+            else if (s == "M") {
+                var temp = Arr_color[1][0].c;
+                Arr_color[1][0].c = Arr_color[19][1].c; Arr_color[19][1].c = Arr_color[25][0].c;
+                Arr_color[25][0].c = Arr_color[7][1].c; Arr_color[7][1].c = temp; temp = Arr_color[1][1].c;
+                Arr_color[1][1].c = Arr_color[19][0].c; Arr_color[19][0].c = Arr_color[25][1].c;
+                Arr_color[25][1].c = Arr_color[7][0].c; Arr_color[7][0].c = temp; temp = Arr_color[4][0].c;
+                Arr_color[4][0].c = Arr_color[10][0].c; Arr_color[10][0].c = Arr_color[22][0].c;
+                Arr_color[22][0].c = Arr_color[16][0].c; Arr_color[16][0].c = temp;
+            }
+            else if (s == "M'") {
+                var temp = Arr_color[1][0].c;
+                Arr_color[1][0].c = Arr_color[7][1].c; Arr_color[7][1].c = Arr_color[25][0].c;
+                Arr_color[25][0].c = Arr_color[19][1].c; Arr_color[19][1].c = temp; temp = Arr_color[1][1].c;
+                Arr_color[1][1].c = Arr_color[7][0].c; Arr_color[7][0].c = Arr_color[25][1].c;
+                Arr_color[25][1].c = Arr_color[19][0].c; Arr_color[19][0].c = temp; temp = Arr_color[4][0].c;
+                Arr_color[4][0].c = Arr_color[16][0].c; Arr_color[16][0].c = Arr_color[22][0].c;
+                Arr_color[22][0].c = Arr_color[10][0].c; Arr_color[10][0].c = temp;
+            }
+            else if (s == "S") {
+                var temp = Arr_color[3][0].c;
+                Arr_color[3][0].c = Arr_color[21][1].c; Arr_color[21][1].c = Arr_color[23][0].c;
+                Arr_color[23][0].c = Arr_color[5][1].c; Arr_color[5][1].c = temp; temp = Arr_color[3][1].c;
+                Arr_color[3][1].c = Arr_color[21][0].c; Arr_color[21][0].c = Arr_color[23][1].c;
+                Arr_color[23][1].c = Arr_color[5][0].c; Arr_color[5][0].c = temp; temp = Arr_color[4][0].c;
+                Arr_color[4][0].c = Arr_color[12][0].c; Arr_color[12][0].c = Arr_color[22][0].c;
+                Arr_color[22][0].c = Arr_color[14][0].c; Arr_color[14][0].c = temp;
+            }
+            else if (s == "S'") {
+                var temp = Arr_color[3][0].c;
+                Arr_color[3][0].c = Arr_color[5][1].c; Arr_color[5][1].c = Arr_color[23][0].c;
+                Arr_color[23][0].c = Arr_color[21][1].c; Arr_color[21][1].c = temp; temp = Arr_color[3][1].c;
+                Arr_color[3][1].c = Arr_color[5][0].c; Arr_color[5][0].c = Arr_color[23][1].c;
+                Arr_color[23][1].c = Arr_color[21][0].c; Arr_color[21][0].c = temp; temp = Arr_color[4][0].c;
+                Arr_color[4][0].c = Arr_color[14][0].c; Arr_color[14][0].c = Arr_color[22][0].c;
+                Arr_color[22][0].c = Arr_color[12][0].c; Arr_color[12][0].c = temp;
+            }
+            else if (s == "E") {
+                var temp = Arr_color[9][0].c;
+                Arr_color[9][0].c = Arr_color[11][1].c; Arr_color[11][1].c = Arr_color[17][0].c;
+                Arr_color[17][0].c = Arr_color[15][1].c; Arr_color[15][1].c = temp; temp = Arr_color[9][1].c;
+                Arr_color[9][1].c = Arr_color[11][0].c; Arr_color[11][0].c = Arr_color[17][1].c;
+                Arr_color[17][1].c = Arr_color[15][0].c; Arr_color[15][0].c = temp; temp = Arr_color[10][0].c;
+                Arr_color[10][0].c = Arr_color[14][0].c; Arr_color[14][0].c = Arr_color[16][0].c;
+                Arr_color[16][0].c = Arr_color[12][0].c; Arr_color[12][0].c = temp;
+            }
+            else if (s == "E'") {
+                var temp = Arr_color[9][0].c;
+                Arr_color[9][0].c = Arr_color[15][1].c; Arr_color[15][1].c = Arr_color[17][0].c;
+                Arr_color[17][0].c = Arr_color[11][1].c; Arr_color[11][1].c = temp; temp = Arr_color[9][1].c;
+                Arr_color[9][1].c = Arr_color[15][0].c; Arr_color[15][0].c = Arr_color[17][1].c;
+                Arr_color[17][1].c = Arr_color[11][0].c; Arr_color[11][0].c = temp; temp = Arr_color[10][0].c;
+                Arr_color[10][0].c = Arr_color[12][0].c; Arr_color[12][0].c = Arr_color[16][0].c;
+                Arr_color[16][0].c = Arr_color[14][0].c; Arr_color[14][0].c = temp;
+            }
+        }
+
+        var now_move = false;
+
+        class Cube {
+            cube_geometry = new THREE.BoxGeometry(9.8, 9.8, 9.8);
+            cube_material = new THREE.MeshLambertMaterial({ color: 0x444444 });
+            color = ['yellow', 'ForestGreen', 'DarkOrange', 'blue', 'red', 'white', 0x444444];
+            constructor() {
+                for (var i = 0; i < 27; i++) {
+                    if (i == 13) continue;
+                    var group = new THREE.Group();
+                    var temp = new THREE.Mesh(this.cube_geometry.clone(), this.cube_material.clone());
+                    temp.position.set(0, 0, 0);
+                    group.add(temp);
+                    for (var j = 0; j < Arr_color[i].length; j++) {
+                        var temp_mesh = null;
+                        if (Arr_color[i][j].t == 0) {
+                            var geometry = new THREE.BoxGeometry(8.8, 0.2, 8.8);
+                            var material = new THREE.MeshLambertMaterial({ color: this.color[Arr_color[i][j].c] });
+                            temp_mesh = new THREE.Mesh(geometry, material);
+                            temp_mesh.position.copy(temp.position);
+                            temp_mesh.translateY(5);
+                        }
+                        if (Arr_color[i][j].t == 1) {
+                            var geometry = new THREE.BoxGeometry(8.8, 8.8, 0.2);
+                            var material = new THREE.MeshLambertMaterial({ color: this.color[Arr_color[i][j].c] });
+                            temp_mesh = new THREE.Mesh(geometry, material);
+                            temp_mesh.position.copy(temp.position);
+                            temp_mesh.translateZ(5);
+                        }
+                        if (Arr_color[i][j].t == 2) {
+                            var geometry = new THREE.BoxGeometry(0.2, 8.8, 8.8);
+                            var material = new THREE.MeshLambertMaterial({ color: this.color[Arr_color[i][j].c] });
+                            temp_mesh = new THREE.Mesh(geometry, material);
+                            temp_mesh.position.copy(temp.position);
+                            temp_mesh.translateX(5);
+                        }
+                        if (Arr_color[i][j].t == 3) {
+                            var geometry = new THREE.BoxGeometry(8.8, 8.8, 0.2);
+                            var material = new THREE.MeshLambertMaterial({ color: this.color[Arr_color[i][j].c] });
+                            temp_mesh = new THREE.Mesh(geometry, material);
+                            temp_mesh.position.copy(temp.position);
+                            temp_mesh.translateZ(-5);
+                        }
+                        if (Arr_color[i][j].t == 4) {
+                            var geometry = new THREE.BoxGeometry(0.2, 8.8, 8.8);
+                            var material = new THREE.MeshLambertMaterial({ color: this.color[Arr_color[i][j].c] });
+                            temp_mesh = new THREE.Mesh(geometry, material);
+                            temp_mesh.position.copy(temp.position);
+                            temp_mesh.translateX(-5);
+                        }
+                        if (Arr_color[i][j].t == 5) {
+                            var geometry = new THREE.BoxGeometry(8.8, 0.2, 8.8);
+                            var material = new THREE.MeshLambertMaterial({ color: this.color[Arr_color[i][j].c] });
+                            temp_mesh = new THREE.Mesh(geometry, material);
+                            temp_mesh.position.copy(temp.position);
+                            temp_mesh.translateY(-5);
+                        }
+                        group.add(temp_mesh);
+                        group.position.set(position[i * 3], position[i * 3 + 1], position[i * 3 + 2]);
+                        mesh[i] = group;
+                    }
+                    scene.add(group);
+                }
+            }
+        }
+
+        function dispose(Obj) {
+            Obj.children.forEach(obj => {
+                if (typeof (obj.type) != "undefined" && obj.type == 'Mesh') {
+                    obj.geometry.dispose();
+                    obj.material.dispose();
+                }
+                else if (typeof (obj.type) != "undefined" && obj.type == 'Group') {
+                    dispose(obj);
+                }
+            });
+            if (code_start_move) code_start_move = false;
+        }
+
+        function save() {
+            mesh.forEach(obj => {
+                dispose(obj);
+            });
+            for (var i = 0; i < 27; i++) scene.remove(mesh[i]);
+            new Cube();
+            now_move = false;
+        }
+
+        function move(s) {
+            if (now_move) return;
+            now_move = true;
+            if (!code_start_move) hide(true);
+            var group = new THREE.Group();
+            var n = 1;
+            var angle = 0;
+
+            function move_U() {
+                group.rotation.y = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_U, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("U");
+                    save();
+                }
+            }
+            function move_U_() {
+                group.rotation.y = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_U_, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("U'");
+                    save();
+                }
+            }
+            function move_U2() {
+                group.rotation.y = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_U2, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("U");
+                    move_all("U");
+                    save();
+                }
+            }
+            function move_Uw() {
+                group.rotation.y = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_Uw, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("U");
+                    move_all("E'");
+                    save();
+                }
+            }
+            function move_Uw_() {
+                group.rotation.y = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_Uw_, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("U'");
+                    move_all("E");
+                    save();
+                }
+            }
+            function move_Uw2() {
+                group.rotation.y = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_Uw2, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("U");
+                    move_all("U");
+                    move_all("E'");
+                    move_all("E'");
+                    save();
+                }
+            }
+            function move_D() {
+                group.rotation.y = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_D, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("D");
+                    save();
+                }
+            }
+            function move_D_() {
+                group.rotation.y = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_D_, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("D'");
+                    save();
+                }
+            }
+            function move_D2() {
+                group.rotation.y = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_D2, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("D");
+                    move_all("D");
+                    save();
+                }
+            }
+            function move_Dw() {
+                group.rotation.y = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_Dw, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("D");
+                    move_all("E");
+                    save();
+                }
+            }
+            function move_Dw_() {
+                group.rotation.y = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_Dw_, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("D'");
+                    move_all("E'");
+                    save();
+                }
+            }
+            function move_Dw2() {
+                group.rotation.y = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_Dw2, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("D");
+                    move_all("D");
+                    move_all("E");
+                    move_all("E");
+                    save();
+                }
+            }
+            function move_L() {
+                group.rotation.x = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_L, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("L");
+                    save();
+                }
+            }
+            function move_L_() {
+                group.rotation.x = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_L_, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("L'");
+                    save();
+                }
+            }
+            function move_L2() {
+                group.rotation.x = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_L2, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("L");
+                    move_all("L");
+                    save();
+                }
+            }
+            function move_Lw() {
+                group.rotation.x = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_Lw, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("L");
+                    move_all("M");
+                    save();
+                }
+            }
+            function move_Lw_() {
+                group.rotation.x = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_Lw_, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("L'");
+                    move_all("M'");
+                    save();
+                }
+            }
+            function move_Lw2() {
+                group.rotation.x = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_Lw2, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("L");
+                    move_all("L");
+                    move_all("M");
+                    move_all("M");
+                    save();
+                }
+            }
+            function move_R() {
+                group.rotation.x = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_R, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("R");
+                    save();
+                }
+            }
+            function move_R_() {
+                group.rotation.x = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_R_, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("R'");
+                    save();
+                }
+            }
+            function move_R2() {
+                group.rotation.x = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_R2, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("R");
+                    move_all("R");
+                    save();
+                }
+            }
+            function move_Rw() {
+                group.rotation.x = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_Rw, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("R");
+                    move_all("M'");
+                    save();
+                }
+            }
+            function move_Rw_() {
+                group.rotation.x = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_Rw_, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("R'");
+                    move_all("M");
+                    save();
+                }
+            }
+            function move_Rw2() {
+                group.rotation.x = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_Rw2, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("R");
+                    move_all("R");
+                    move_all("M'");
+                    move_all("M'");
+                    save();
+                }
+            }
+            function move_F() {
+                group.rotation.z = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_F, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("F");
+                    save();
+                }
+            }
+            function move_F_() {
+                group.rotation.z = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_F_, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("F'");
+                    save();
+                }
+            }
+            function move_F2() {
+                group.rotation.z = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_F2, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("F");
+                    move_all("F");
+                    save();
+                }
+            }
+            function move_Fw() {
+                group.rotation.z = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_Fw, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("F");
+                    move_all("S");
+                    save();
+                }
+            }
+            function move_Fw_() {
+                group.rotation.z = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_Fw_, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("F'");
+                    move_all("S'");
+                    save();
+                }
+            }
+            function move_Fw2() {
+                group.rotation.z = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_Fw2, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("F");
+                    move_all("F");
+                    move_all("S");
+                    move_all("S");
+                    save();
+                }
+            }
+            function move_B() {
+                group.rotation.z = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_B, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("B");
+                    save();
+                }
+            }
+            function move_B_() {
+                group.rotation.z = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_B_, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("B'");
+                    save();
+                }
+            }
+            function move_B2() {
+                group.rotation.z = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_B2, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("B");
+                    move_all("B");
+                    save();
+                }
+            }
+            function move_Bw() {
+                group.rotation.z = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_Bw, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("B");
+                    move_all("S'");
+                    save();
+                }
+            }
+            function move_Bw_() {
+                group.rotation.z = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_Bw_, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("B'");
+                    move_all("S");
+                    save();
+                }
+            }
+            function move_Bw2() {
+                group.rotation.z = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_Bw2, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("B");
+                    move_all("B");
+                    move_all("S'");
+                    move_all("S'");
+                    save();
+                }
+            }
+            function move_M() {
+                group.rotation.x = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_M, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("M");
+                    save();
+                }
+            }
+            function move_M_() {
+                group.rotation.x = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_M_, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("M'");
+                    save();
+                }
+            }
+            function move_M2() {
+                group.rotation.x = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_M2, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("M");
+                    move_all("M");
+                    save();
+                }
+            }
+            function move_S() {
+                group.rotation.z = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_S, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("S");
+                    save();
+                }
+            }
+            function move_S_() {
+                group.rotation.z = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_S_, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("S'");
+                    save();
+                }
+            }
+            function move_S2() {
+                group.rotation.z = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_S2, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("S");
+                    move_all("S");
+                    save();
+                }
+            }
+            function move_E() {
+                group.rotation.y = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_E, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("E");
+                    save();
+                }
+            }
+            function move_E_() {
+                group.rotation.y = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_E_, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("E'");
+                    save();
+                }
+            }
+            function move_E2() {
+                group.rotation.y = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_E2, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("E");
+                    move_all("E");
+                    save();
+                }
+            }
+
+            function move_X() {
+                group.rotation.x = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_X, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("L'");
+                    move_all("M'");
+                    move_all("R");
+                    save();
+                }
+            }
+            function move_X_() {
+                group.rotation.x = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_X_, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("L");
+                    move_all("M");
+                    move_all("R'");
+                    save();
+                }
+            }
+            function move_X2() {
+                group.rotation.x = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_X2, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("L'"); move_all("L'");
+                    move_all("M'"); move_all("M'");
+                    move_all("R"); move_all("R");
+                    save();
+                }
+            }
+            function move_Y() {
+                group.rotation.y = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_Y, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("U");
+                    move_all("E'");
+                    move_all("D'");
+                    save();
+                }
+            }
+            function move_Y_() {
+                group.rotation.y = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_Y_, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("U'");
+                    move_all("E");
+                    move_all("D");
+                    save();
+                }
+            }
+            function move_Y2() {
+                group.rotation.y = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_Y2, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("U"); move_all("U");
+                    move_all("E'"); move_all("E'");
+                    move_all("D'"); move_all("D'");
+                    save();
+                }
+            }
+            function move_Z() {
+                group.rotation.z = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_Z, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("F");
+                    move_all("S");
+                    move_all("B'");
+                    save();
+                }
+            }
+            function move_Z_() {
+                group.rotation.z = n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_Z_, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("F'");
+                    move_all("S'");
+                    move_all("B");
+                    save();
+                }
+            }
+            function move_Z2() {
+                group.rotation.z = -n * Math.PI / 180 * speed;
+                if (++n <= angle / speed) setTimeout(move_Z2, 1000 / 60);
+                else {
+                    dispose(group);
+                    scene.remove(group);
+                    move_all("F"); move_all("F");
+                    move_all("S"); move_all("S");
+                    move_all("B'"); move_all("B'");
+                    save();
+                }
+            }
+
+            if (s == "U") {
+                group.add(mesh[0], mesh[1], mesh[2], mesh[3], mesh[4], mesh[5], mesh[6], mesh[7], mesh[8]);
+                angle = 90;
+                move_U();
+            }
+            else if (s == "U'") {
+                group.add(mesh[0], mesh[1], mesh[2], mesh[3], mesh[4], mesh[5], mesh[6], mesh[7], mesh[8]);
+                angle = 90;
+                move_U_();
+            }
+            else if (s == "U2") {
+                group.add(mesh[0], mesh[1], mesh[2], mesh[3], mesh[4], mesh[5], mesh[6], mesh[7], mesh[8]);
+                angle = 180;
+                move_U2();
+            }
+            else if (s == "Uw") {
+                group.add(mesh[0], mesh[1], mesh[2], mesh[3], mesh[4], mesh[5], mesh[6], mesh[7], mesh[8]);
+                group.add(mesh[9], mesh[10], mesh[11], mesh[12], mesh[14], mesh[15], mesh[16], mesh[17]);
+                angle = 90;
+                move_Uw();
+            }
+            else if (s == "Uw'") {
+                group.add(mesh[0], mesh[1], mesh[2], mesh[3], mesh[4], mesh[5], mesh[6], mesh[7], mesh[8]);
+                group.add(mesh[9], mesh[10], mesh[11], mesh[12], mesh[14], mesh[15], mesh[16], mesh[17]);
+                angle = 90;
+                move_Uw_();
+            }
+            else if (s == "Uw2") {
+                group.add(mesh[0], mesh[1], mesh[2], mesh[3], mesh[4], mesh[5], mesh[6], mesh[7], mesh[8]);
+                group.add(mesh[9], mesh[10], mesh[11], mesh[12], mesh[14], mesh[15], mesh[16], mesh[17]);
+                angle = 180;
+                move_Uw2();
+            }
+            else if (s == "D") {
+                group.add(mesh[18], mesh[19], mesh[20], mesh[21], mesh[22], mesh[23], mesh[24], mesh[25], mesh[26]);
+                angle = 90;
+                move_D();
+            }
+            else if (s == "D'") {
+                group.add(mesh[18], mesh[19], mesh[20], mesh[21], mesh[22], mesh[23], mesh[24], mesh[25], mesh[26]);
+                angle = 90;
+                move_D_();
+            }
+            else if (s == "D2") {
+                group.add(mesh[18], mesh[19], mesh[20], mesh[21], mesh[22], mesh[23], mesh[24], mesh[25], mesh[26]);
+                angle = 180;
+                move_D2();
+            }
+            else if (s == "Dw") {
+                group.add(mesh[18], mesh[19], mesh[20], mesh[21], mesh[22], mesh[23], mesh[24], mesh[25], mesh[26]);
+                group.add(mesh[9], mesh[10], mesh[11], mesh[12], mesh[14], mesh[15], mesh[16], mesh[17]);
+                angle = 90;
+                move_Dw();
+            }
+            else if (s == "Dw'") {
+                group.add(mesh[18], mesh[19], mesh[20], mesh[21], mesh[22], mesh[23], mesh[24], mesh[25], mesh[26]);
+                group.add(mesh[9], mesh[10], mesh[11], mesh[12], mesh[14], mesh[15], mesh[16], mesh[17]);
+                angle = 90;
+                move_Dw_();
+            }
+            else if (s == "Dw2") {
+                group.add(mesh[18], mesh[19], mesh[20], mesh[21], mesh[22], mesh[23], mesh[24], mesh[25], mesh[26]);
+                group.add(mesh[9], mesh[10], mesh[11], mesh[12], mesh[14], mesh[15], mesh[16], mesh[17]);
+                angle = 180;
+                move_Dw2();
+            }
+            else if (s == "L") {
+                group.add(mesh[0], mesh[3], mesh[6], mesh[9], mesh[12], mesh[15], mesh[18], mesh[21], mesh[24]);
+                angle = 90;
+                move_L();
+            }
+            else if (s == "L'") {
+                group.add(mesh[0], mesh[3], mesh[6], mesh[9], mesh[12], mesh[15], mesh[18], mesh[21], mesh[24]);
+                angle = 90;
+                move_L_();
+            }
+            else if (s == "L2") {
+                group.add(mesh[0], mesh[3], mesh[6], mesh[9], mesh[12], mesh[15], mesh[18], mesh[21], mesh[24]);
+                angle = 180;
+                move_L2();
+            }
+            else if (s == "Lw") {
+                group.add(mesh[0], mesh[3], mesh[6], mesh[9], mesh[12], mesh[15], mesh[18], mesh[21], mesh[24]);
+                group.add(mesh[1], mesh[4], mesh[7], mesh[10], mesh[16], mesh[19], mesh[22], mesh[25]);
+                angle = 90;
+                move_Lw();
+            }
+            else if (s == "Lw'") {
+                group.add(mesh[0], mesh[3], mesh[6], mesh[9], mesh[12], mesh[15], mesh[18], mesh[21], mesh[24]);
+                group.add(mesh[1], mesh[4], mesh[7], mesh[10], mesh[16], mesh[19], mesh[22], mesh[25]);
+                angle = 90;
+                move_Lw_();
+            }
+            else if (s == "Lw2") {
+                group.add(mesh[0], mesh[3], mesh[6], mesh[9], mesh[12], mesh[15], mesh[18], mesh[21], mesh[24]);
+                group.add(mesh[1], mesh[4], mesh[7], mesh[10], mesh[16], mesh[19], mesh[22], mesh[25]);
+                angle = 180;
+                move_Lw2();
+            }
+            else if (s == "R") {
+                group.add(mesh[2], mesh[5], mesh[8], mesh[11], mesh[14], mesh[17], mesh[20], mesh[23], mesh[26]);
+                angle = 90;
+                move_R();
+            }
+            else if (s == "R'") {
+                group.add(mesh[2], mesh[5], mesh[8], mesh[11], mesh[14], mesh[17], mesh[20], mesh[23], mesh[26]);
+                angle = 90;
+                move_R_();
+            }
+            else if (s == "R2") {
+                group.add(mesh[2], mesh[5], mesh[8], mesh[11], mesh[14], mesh[17], mesh[20], mesh[23], mesh[26]);
+                angle = 180;
+                move_R2();
+            }
+            else if (s == "Rw") {
+                group.add(mesh[2], mesh[5], mesh[8], mesh[11], mesh[14], mesh[17], mesh[20], mesh[23], mesh[26]);
+                group.add(mesh[1], mesh[4], mesh[7], mesh[10], mesh[16], mesh[19], mesh[22], mesh[25]);
+                angle = 90;
+                move_Rw();
+            }
+            else if (s == "Rw'") {
+                group.add(mesh[2], mesh[5], mesh[8], mesh[11], mesh[14], mesh[17], mesh[20], mesh[23], mesh[26]);
+                group.add(mesh[1], mesh[4], mesh[7], mesh[10], mesh[16], mesh[19], mesh[22], mesh[25]);
+                angle = 90;
+                move_Rw_();
+            }
+            else if (s == "Rw2") {
+                group.add(mesh[2], mesh[5], mesh[8], mesh[11], mesh[14], mesh[17], mesh[20], mesh[23], mesh[26]);
+                group.add(mesh[1], mesh[4], mesh[7], mesh[10], mesh[16], mesh[19], mesh[22], mesh[25]);
+                angle = 180;
+                move_Rw2();
+            }
+            else if (s == "F") {
+                group.add(mesh[6], mesh[7], mesh[8], mesh[15], mesh[16], mesh[17], mesh[24], mesh[25], mesh[26]);
+                angle = 90;
+                move_F();
+            }
+            else if (s == "F'") {
+                group.add(mesh[6], mesh[7], mesh[8], mesh[15], mesh[16], mesh[17], mesh[24], mesh[25], mesh[26]);
+                angle = 90;
+                move_F_();
+            }
+            else if (s == "F2") {
+                group.add(mesh[6], mesh[7], mesh[8], mesh[15], mesh[16], mesh[17], mesh[24], mesh[25], mesh[26]);
+                angle = 180;
+                move_F2();
+            }
+            else if (s == "Fw") {
+                group.add(mesh[6], mesh[7], mesh[8], mesh[15], mesh[16], mesh[17], mesh[24], mesh[25], mesh[26]);
+                group.add(mesh[3], mesh[4], mesh[5], mesh[12], mesh[14], mesh[21], mesh[22], mesh[23]);
+                angle = 90;
+                move_Fw();
+            }
+            else if (s == "Fw'") {
+                group.add(mesh[6], mesh[7], mesh[8], mesh[15], mesh[16], mesh[17], mesh[24], mesh[25], mesh[26]);
+                group.add(mesh[3], mesh[4], mesh[5], mesh[12], mesh[14], mesh[21], mesh[22], mesh[23]);
+                angle = 90;
+                move_Fw_();
+            }
+            else if (s == "Fw2") {
+                group.add(mesh[6], mesh[7], mesh[8], mesh[15], mesh[16], mesh[17], mesh[24], mesh[25], mesh[26]);
+                group.add(mesh[3], mesh[4], mesh[5], mesh[12], mesh[14], mesh[21], mesh[22], mesh[23]);
+                angle = 180;
+                move_Fw2();
+            }
+            else if (s == "B") {
+                group.add(mesh[0], mesh[1], mesh[2], mesh[9], mesh[10], mesh[11], mesh[18], mesh[19], mesh[20]);
+                angle = 90;
+                move_B();
+            }
+            else if (s == "B'") {
+                group.add(mesh[0], mesh[1], mesh[2], mesh[9], mesh[10], mesh[11], mesh[18], mesh[19], mesh[20]);
+                angle = 90;
+                move_B_();
+            }
+            else if (s == "B2") {
+                group.add(mesh[0], mesh[1], mesh[2], mesh[9], mesh[10], mesh[11], mesh[18], mesh[19], mesh[20]);
+                angle = 180;
+                move_B2();
+            }
+            else if (s == "Bw") {
+                group.add(mesh[0], mesh[1], mesh[2], mesh[9], mesh[10], mesh[11], mesh[18], mesh[19], mesh[20]);
+                group.add(mesh[3], mesh[4], mesh[5], mesh[12], mesh[14], mesh[21], mesh[22], mesh[23]);
+                angle = 90;
+                move_Bw();
+            }
+            else if (s == "Bw'") {
+                group.add(mesh[0], mesh[1], mesh[2], mesh[9], mesh[10], mesh[11], mesh[18], mesh[19], mesh[20]);
+                group.add(mesh[3], mesh[4], mesh[5], mesh[12], mesh[14], mesh[21], mesh[22], mesh[23]);
+                angle = 90;
+                move_Bw_();
+            }
+            else if (s == "Bw2") {
+                group.add(mesh[0], mesh[1], mesh[2], mesh[9], mesh[10], mesh[11], mesh[18], mesh[19], mesh[20]);
+                group.add(mesh[3], mesh[4], mesh[5], mesh[12], mesh[14], mesh[21], mesh[22], mesh[23]);
+                angle = 180;
+                move_Bw2();
+            }
+            else if (s == "M") {
+                group.add(mesh[1], mesh[4], mesh[7], mesh[10], mesh[16], mesh[19], mesh[22], mesh[25]);
+                angle = 90;
+                move_M();
+            }
+            else if (s == "M'") {
+                group.add(mesh[1], mesh[4], mesh[7], mesh[10], mesh[16], mesh[19], mesh[22], mesh[25]);
+                angle = 90;
+                move_M_();
+            }
+            else if (s == "M2") {
+                group.add(mesh[1], mesh[4], mesh[7], mesh[10], mesh[16], mesh[19], mesh[22], mesh[25]);
+                angle = 180;
+                move_M2();
+            }
+            else if (s == "S") {
+                group.add(mesh[3], mesh[4], mesh[5], mesh[12], mesh[14], mesh[21], mesh[22], mesh[23]);
+                angle = 90;
+                move_S();
+            }
+            else if (s == "S'") {
+                group.add(mesh[3], mesh[4], mesh[5], mesh[12], mesh[14], mesh[21], mesh[22], mesh[23]);
+                angle = 90;
+                move_S_();
+            }
+            else if (s == "S2") {
+                group.add(mesh[3], mesh[4], mesh[5], mesh[12], mesh[14], mesh[21], mesh[22], mesh[23]);
+                angle = 180;
+                move_S2();
+            }
+            else if (s == "E") {
+                group.add(mesh[9], mesh[10], mesh[11], mesh[12], mesh[14], mesh[15], mesh[16], mesh[17]);
+                angle = 90;
+                move_E();
+            }
+            else if (s == "E'") {
+                group.add(mesh[9], mesh[10], mesh[11], mesh[12], mesh[14], mesh[15], mesh[16], mesh[17]);
+                angle = 90;
+                move_E_();
+            }
+            else if (s == "E2") {
+                group.add(mesh[9], mesh[10], mesh[11], mesh[12], mesh[14], mesh[15], mesh[16], mesh[17]);
+                angle = 180;
+                move_E2();
+            }
+            else if (s == "x") {
+                for (var i = 0; i < 27; i++) {
+                    if (i == 13) continue;
+                    group.add(mesh[i]);
+                }
+                angle = 90;
+                move_X();
+            }
+            else if (s == "x'") {
+                for (var i = 0; i < 27; i++) {
+                    if (i == 13) continue;
+                    group.add(mesh[i]);
+                }
+                angle = 90;
+                move_X_();
+            }
+            else if (s == "x2") {
+                for (var i = 0; i < 27; i++) {
+                    if (i == 13) continue;
+                    group.add(mesh[i]);
+                }
+                angle = 180;
+                move_X2();
+            }
+            else if (s == "y") {
+                for (var i = 0; i < 27; i++) {
+                    if (i == 13) continue;
+                    group.add(mesh[i]);
+                }
+                angle = 90;
+                move_Y();
+            }
+            else if (s == "y'") {
+                for (var i = 0; i < 27; i++) {
+                    if (i == 13) continue;
+                    group.add(mesh[i]);
+                }
+                angle = 90;
+                move_Y_();
+            }
+            else if (s == "y2") {
+                for (var i = 0; i < 27; i++) {
+                    if (i == 13) continue;
+                    group.add(mesh[i]);
+                }
+                angle = 180;
+                move_Y2();
+            }
+            else if (s == "z") {
+                for (var i = 0; i < 27; i++) {
+                    if (i == 13) continue;
+                    group.add(mesh[i]);
+                }
+                angle = 90;
+                move_Z();
+            }
+            else if (s == "z'") {
+                for (var i = 0; i < 27; i++) {
+                    if (i == 13) continue;
+                    group.add(mesh[i]);
+                }
+                angle = 90;
+                move_Z_();
+            }
+            else if (s == "z2") {
+                for (var i = 0; i < 27; i++) {
+                    if (i == 13) continue;
+                    group.add(mesh[i]);
+                }
+                angle = 180;
+                move_Z2();
+            }
+            else {
+                now_move = false;
+            }
+            scene.add(group);
+        }
+
+        var now_random_move = false;
+
+        function random_move() {
+            if (now_move || now_random_move) return;
+            recovery();
+            now_random_move = true;
+            speed = 16;
+            var step = 19 + Math.floor((Math.random() - 0.5) * 4);
+            var step_code = [];
+            for (var i = 0; i < step; i++) {
+                var temp = code[Math.floor(Math.random() * code.length)];
+                while (i > 0) {
+                    temp = code[Math.floor(Math.random() * code.length)];
+                    if (step_code[i - 1] == "U" || step_code[i - 1] == "U'" || step_code[i - 1] == "U2") {
+                        if (temp != "U" && temp != "U'" && temp != "U2") break;
+                    }
+                    else if (step_code[i - 1] == "D" || step_code[i - 1] == "D'" || step_code[i - 1] == "D2") {
+                        if (temp != "D" && temp != "D'" && temp != "D2") break;
+                    }
+                    else if (step_code[i - 1] == "L" || step_code[i - 1] == "L'" || step_code[i - 1] == "L2") {
+                        if (temp != "L" && temp != "L'" && temp != "L2") break;
+                    }
+                    else if (step_code[i - 1] == "R" || step_code[i - 1] == "R'" || step_code[i - 1] == "R2") {
+                        if (temp != "R" && temp != "R'" && temp != "R2") break;
+                    }
+                    else if (step_code[i - 1] == "F" || step_code[i - 1] == "F'" || step_code[i - 1] == "F2") {
+                        if (temp != "F" && temp != "F'" && temp != "F2") break;
+                    }
+                    else if (step_code[i - 1] == "B" || step_code[i - 1] == "B'" || step_code[i - 1] == "B2") {
+                        if (temp != "B" && temp != "B'" && temp != "B2") break;
+                    }
+                }
+                step_code.push(temp);
+            }
+            code_move(step_code, 0);
+            hide(true);
+        }
+
+        function code_move(array, i) {
+            if (i > array.length) {
+                change_speed();
+                now_random_move = false;
+                return;
+            }
+            if (!now_move) {
+                move(array[i]);
+                i++;
+            }
+            setTimeout(() => {
+                code_move(array, i);
+            }, 10);
+        }
+
+        function recovery() {
+            if (now_move || now_random_move) return;
+            move_state(2, 0);
+            save();
+            hide(true);
+        }
+
+        function move_state(s, n) {
+            if (now_move || now_random_move) return;
+            for (var i = 0, count = 0; i < Arr_color.length; i++) {
+                for (var j = 0; j < Arr_color[i].length; j++) {
+                    Arr_color[i][j].c = formula[s][n][count++];
+                }
+            }
+        }
+
+        var conduct_step = { i: -1, step: [] };
+
+        function move_formula(s, n) {
+            if (now_move || now_random_move) return;
+            conduct_step.i = 0;
+            conduct_step.step = formula[s][n];
+            move_state(s, 0);
+            for (var i = formula[s][n].length - 1; i >= 0; i--) {
+                if (formula[s][n][i] == "U") { move_all("U'"); }
+                else if (formula[s][n][i] == "U'") { move_all("U"); }
+                else if (formula[s][n][i] == "U2") { move_all("U"); move_all("U"); }
+                else if (formula[s][n][i] == "Uw") { move_all("U'"); move_all("E"); }
+                else if (formula[s][n][i] == "Uw'") { move_all("U"); move_all("E'"); }
+                else if (formula[s][n][i] == "Uw2") { move_all("U"); move_all("E'"); move_all("U"); move_all("E'"); }
+                else if (formula[s][n][i] == "D") { move_all("D'"); }
+                else if (formula[s][n][i] == "D'") { move_all("D"); }
+                else if (formula[s][n][i] == "D2") { move_all("D"); move_all("D"); }
+                else if (formula[s][n][i] == "Dw") { move_all("D'"); move_all("E'"); }
+                else if (formula[s][n][i] == "Dw'") { move_all("D"); move_all("E"); }
+                else if (formula[s][n][i] == "Dw2") { move_all("D"); move_all("E"); move_all("D"); move_all("E"); }
+                else if (formula[s][n][i] == "L") { move_all("L'"); }
+                else if (formula[s][n][i] == "L'") { move_all("L"); }
+                else if (formula[s][n][i] == "L2") { move_all("L"); move_all("L"); }
+                else if (formula[s][n][i] == "Lw") { move_all("L'"); move_all("M'"); }
+                else if (formula[s][n][i] == "Lw'") { move_all("L"); move_all("M"); }
+                else if (formula[s][n][i] == "Lw2") { move_all("L"); move_all("M"); move_all("L"); move_all("M"); }
+                else if (formula[s][n][i] == "R") { move_all("R'"); }
+                else if (formula[s][n][i] == "R'") { move_all("R"); }
+                else if (formula[s][n][i] == "R2") { move_all("R"); move_all("R"); }
+                else if (formula[s][n][i] == "Rw") { move_all("R'"); move_all("M"); }
+                else if (formula[s][n][i] == "Rw'") { move_all("R"); move_all("M'"); }
+                else if (formula[s][n][i] == "Rw2") { move_all("R"); move_all("M'"); move_all("R"); move_all("M'"); }
+                else if (formula[s][n][i] == "F") { move_all("F'"); }
+                else if (formula[s][n][i] == "F'") { move_all("F"); }
+                else if (formula[s][n][i] == "F2") { move_all("F"); move_all("F"); }
+                else if (formula[s][n][i] == "Fw") { move_all("F'"); move_all("S'"); }
+                else if (formula[s][n][i] == "Fw'") { move_all("F"); move_all("S"); }
+                else if (formula[s][n][i] == "Fw2") { move_all("F"); move_all("S"); move_all("F"); move_all("S"); }
+                else if (formula[s][n][i] == "B") { move_all("B'"); }
+                else if (formula[s][n][i] == "B'") { move_all("B"); }
+                else if (formula[s][n][i] == "B2") { move_all("B"); move_all("B"); }
+                else if (formula[s][n][i] == "Bw") { move_all("B'"); move_all("S"); }
+                else if (formula[s][n][i] == "Bw'") { move_all("B"); move_all("S'"); }
+                else if (formula[s][n][i] == "Bw2") { move_all("B"); move_all("S'"); move_all("B"); move_all("S'"); }
+                else if (formula[s][n][i] == "M") { move_all("M'"); }
+                else if (formula[s][n][i] == "M'") { move_all("M"); }
+                else if (formula[s][n][i] == "M2") { move_all("M"); move_all("M"); }
+                else if (formula[s][n][i] == "S") { move_all("S'"); }
+                else if (formula[s][n][i] == "S'") { move_all("S"); }
+                else if (formula[s][n][i] == "S2") { move_all("S"); move_all("S"); }
+                else if (formula[s][n][i] == "E") { move_all("E'"); }
+                else if (formula[s][n][i] == "E'") { move_all("E"); }
+                else if (formula[s][n][i] == "E2") { move_all("E"); move_all("E"); }
+                else if (formula[s][n][i] == "x") { move_all("L"); move_all("M"); move_all("R'"); }
+                else if (formula[s][n][i] == "x'") { move_all("L'"); move_all("M'"); move_all("R"); }
+                else if (formula[s][n][i] == "x2") { move_all("L'"); move_all("M'"); move_all("R"); move_all("L'"); move_all("M'"); move_all("R"); }
+                else if (formula[s][n][i] == "y") { move_all("U'"); move_all("E"); move_all("D"); }
+                else if (formula[s][n][i] == "y'") { move_all("U"); move_all("E'"); move_all("D'"); }
+                else if (formula[s][n][i] == "y2") { move_all("U"); move_all("E'"); move_all("D'"); move_all("U"); move_all("E'"); move_all("D'"); }
+                else if (formula[s][n][i] == "z") { move_all("F'"); move_all("S'"); move_all("B"); }
+                else if (formula[s][n][i] == "z'") { move_all("F"); move_all("S"); move_all("B'"); }
+                else if (formula[s][n][i] == "z2") { move_all("F"); move_all("S"); move_all("B'"); move_all("F"); move_all("S"); move_all("B'"); }
+            }
+            save();
+            hide(false);
+            change_hint(formula[s][n].toString(), formula[s][n].length);
+        }
+
+        function change_hint(s, n) {
+            var hint = document.getElementById('hint_span');
+            for (var i = 0; i < n; i++) s = s.replace(",", " ");
+            hint.innerText = s.replace(",", " ");
+        }
+
+        var code_start = false;
+        var code_start_move = false;
+
+        function start() {
+            if (code_start) {
+                code_start = false;
+                document.getElementById('start').value = '▶️開始';
+            }
+            else {
+                code_start = true;
+                document.getElementById('start').value = '⏸️暫停';
+            }
+        }
+
+        function next() {
+            if (now_move || now_random_move) return;
+            code_start_move = true;
+            move(conduct_step.step[conduct_step.i++]);
+        }
+
+        function code_move_start() {
+            if (!now_move && conduct_step.i == conduct_step.step.length) {
+                change_speed();
+                init_code();
+                if (code_start) start();
+            }
+            if (!now_move && code_start && conduct_step.i < conduct_step.step.length) {
+                next();
+            }
+            setTimeout(() => {
+                code_move_start();
+            }, 10);
+        }
+
+        function init_code() {
+            conduct_step = { i: -1, step: [] };
+            hide(true);
+        }
+
+        var code_hide = true;
+
+        function hide(bool) {
+            code_hide = bool;
+            var action = document.getElementById('action_bar');
+            var hint = document.getElementById('hint_bar');
+            action.style.display = hint.style.display = (code_hide ? 'none' : '');
+        }
+
+        function change_speed() {
+            if (now_move || now_random_move) {
+                setTimeout(() => {
+                    change_speed();
+                }, 16);
+                return;
+            }
+            speed = Number(document.getElementById('speed_range').value);
+        }
+
+        function init() {
+            setImage();
+            inside = document.getElementById('inside');
+            bar = document.getElementById('Bar');
+            inside.style.width = bar.style.width = window.innerWidth * 0.99 + 'px';
+            inside.style.height = bar.style.height = window.innerHeight * 0.99 + 'px';
+            change_speed();
+
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(
+                90,
+                inside.offsetWidth / inside.offsetHeight,
+                0.1,
+                200
+            );
+            camera.position.set(24, 26, 31);
+            camera.lookAt(new THREE.Vector3(0, 0, 0));
+            scene.add(camera);
+
+            var ambientLight = new THREE.AmbientLight(0xAAAAAA);
+            scene.add(ambientLight);
+
+            renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(inside.offsetWidth, inside.offsetHeight);
+            inside.appendChild(renderer.domElement);
+
+            scene.background = new THREE.Color(0x222222);
+
+            new Cube();
+
+            var light1 = new THREE.PointLight(0xcccccc, 0.3, 50);
+            var light2 = new THREE.PointLight(0xcccccc, 0.3, 50);
+            var light3 = new THREE.PointLight(0xcccccc, 0.3, 50);
+            var light4 = new THREE.PointLight(0xcccccc, 0.3, 50);
+            var light5 = new THREE.PointLight(0xcccccc, 0.3, 50);
+            var light6 = new THREE.PointLight(0xcccccc, 0.3, 50);
+            var light7 = new THREE.PointLight(0xcccccc, 0.3, 50);
+            var light8 = new THREE.PointLight(0xcccccc, 0.3, 50);
+            light1.position.set(30, 30, 30);
+            light2.position.set(30, 30, -30);
+            light3.position.set(-30, 30, 30);
+            light4.position.set(-30, 30, -30);
+            light5.position.set(30, -30, 30);
+            light6.position.set(30, -30, -30);
+            light7.position.set(-30, -30, 30);
+            light8.position.set(-30, -30, -30);
+            light1.decay = light2.decay = light3.decay = light4.decay = light5.decay = light6.decay = light7.decay = light8.decay = 0;
+            scene.add(light1, light2, light3, light4, light5, light6, light7, light8);
+
+            ready = true;
+            code_move_start();
+            screen_resize();
+            setInterval(() => {
+                render();
+            }, 1000 / 60);
+        }
+
+        function render() {
+            renderer.render(scene, camera);
+        }
+
+        function setImage() {
+            for (var i = 1; i <= 41; i++) {
+                document.getElementById('F2L ' + i).src = './img/F2L' + i + '.png';
+            }
+            for (var i = 1; i <= 57; i++) {
+                document.getElementById('OLL ' + i).src = './img/OLL' + i + '.png';
+            }
+            for (var i = 1; i <= 21; i++) {
+                document.getElementById('PLL ' + i).src = './img/PLL' + i + '.png';
+            }
+        }
+
+        window.onresize = screen_resize;
+        function screen_resize() {
+            if (!ready) return;
+            inside.style.width = bar.style.width = window.innerWidth * 0.99 + 'px';
+            inside.style.height = bar.style.height = window.innerHeight * 0.99 + 'px';
+            camera.aspect = inside.offsetWidth / inside.offsetHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(inside.offsetWidth, inside.offsetHeight);
+        }
+    </script>
+</head>
+
+<body onload="init()">
+    <div id="outside">
+        <div id="inside"></div>
+        <div id="Bar">
+            <div class="bar" style="left: 2%; top: 1.5%;">
+                <div class="top_bar"><span class="top_span">Up</span></div>
+                <input type="button" value="U" style="width: 16.6%; left: 0%;" onclick="move(this.value)" class="btn">
+                <input type="button" value="U'" style="width: 16.6%; left: 16.6%;" onclick="move(this.value)"
+                    class="btn">
+                <input type="button" value="U2" style="width: 16.6%; left: 33.3%;" onclick="move(this.value)"
+                    class="btn">
+                <input type="button" value="Uw" style="width: 16.6%; left: 50%;" onclick="move(this.value)" class="btn">
+                <input type="button" value="Uw'" style="width: 16.6%; left: 66.6%;" onclick="move(this.value)"
+                    class="btn">
+                <input type="button" value="Uw2" style="width: 16.6%; left: 83.3%;" onclick="move(this.value)"
+                    class="btn">
+            </div>
+            <div class="bar" style="left: 2%; top: 12.5%;">
+                <div class="top_bar"><span class="top_span">Down</span></div>
+                <input type="button" value="D" style="width: 16.6%; left: 0%;" onclick="move(this.value)" class="btn">
+                <input type="button" value="D'" style="width: 16.6%; left: 16.6%;" onclick="move(this.value)"
+                    class="btn">
+                <input type="button" value="D2" style="width: 16.6%; left: 33.3%;" onclick="move(this.value)"
+                    class="btn">
+                <input type="button" value="Dw" style="width: 16.6%; left: 50%;" onclick="move(this.value)" class="btn">
+                <input type="button" value="Dw'" style="width: 16.6%; left: 66.6%;" onclick="move(this.value)"
+                    class="btn">
+                <input type="button" value="Dw2" style="width: 16.6%; left: 83.3%;" onclick="move(this.value)"
+                    class="btn">
+            </div>
+            <div class="bar" style="left: 2%; top: 23.5%;">
+                <div class="top_bar"><span class="top_span">Left</span></div>
+                <input type="button" value="L" style="width: 16.6%; left: 0%;" onclick="move(this.value)" class="btn">
+                <input type="button" value="L'" style="width: 16.6%; left: 16.6%;" onclick="move(this.value)"
+                    class="btn">
+                <input type="button" value="L2" style="width: 16.6%; left: 33.3%;" onclick="move(this.value)"
+                    class="btn">
+                <input type="button" value="Lw" style="width: 16.6%; left: 50%;" onclick="move(this.value)" class="btn">
+                <input type="button" value="Lw'" style="width: 16.6%; left: 66.6%;" onclick="move(this.value)"
+                    class="btn">
+                <input type="button" value="Lw2" style="width: 16.6%; left: 83.3%;" onclick="move(this.value)"
+                    class="btn">
+            </div>
+            <div class="bar" style="left: 2%; top: 34.5%;">
+                <div class="top_bar"><span class="top_span">Right</span></div>
+                <input type="button" value="R" style="width: 16.6%; left: 0%;" onclick="move(this.value)" class="btn">
+                <input type="button" value="R'" style="width: 16.6%; left: 16.6%;" onclick="move(this.value)"
+                    class="btn">
+                <input type="button" value="R2" style="width: 16.6%; left: 33.3%;" onclick="move(this.value)"
+                    class="btn">
+                <input type="button" value="Rw" style="width: 16.6%; left: 50%;" onclick="move(this.value)" class="btn">
+                <input type="button" value="Rw'" style="width: 16.6%; left: 66.6%;" onclick="move(this.value)"
+                    class="btn">
+                <input type="button" value="Rw2" style="width: 16.6%; left: 83.3%;" onclick="move(this.value)"
+                    class="btn">
+            </div>
+            <div class="bar" style="left: 2%; top: 45.5%;">
+                <div class="top_bar"><span class="top_span">Front</span></div>
+                <input type="button" value="F" style="width: 16.6%; left: 0%;" onclick="move(this.value)" class="btn">
+                <input type="button" value="F'" style="width: 16.6%; left: 16.6%;" onclick="move(this.value)"
+                    class="btn">
+                <input type="button" value="F2" style="width: 16.6%; left: 33.3%;" onclick="move(this.value)"
+                    class="btn">
+                <input type="button" value="Fw" style="width: 16.6%; left: 50%;" onclick="move(this.value)" class="btn">
+                <input type="button" value="Fw'" style="width: 16.6%; left: 66.6%;" onclick="move(this.value)"
+                    class="btn">
+                <input type="button" value="Fw2" style="width: 16.6%; left: 83.3%;" onclick="move(this.value)"
+                    class="btn">
+            </div>
+            <div class="bar" style="left: 2%; top: 56.5%;">
+                <div class="top_bar"><span class="top_span">Back</span></div>
+                <input type="button" value="B" style="width: 16.6%; left: 0%;" onclick="move(this.value)" class="btn">
+                <input type="button" value="B'" style="width: 16.6%; left: 16.6%;" onclick="move(this.value)"
+                    class="btn">
+                <input type="button" value="B2" style="width: 16.6%; left: 33.3%;" onclick="move(this.value)"
+                    class="btn">
+                <input type="button" value="Bw" style="width: 16.6%; left: 50%;" onclick="move(this.value)" class="btn">
+                <input type="button" value="Bw'" style="width: 16.6%; left: 66.6%;" onclick="move(this.value)"
+                    class="btn">
+                <input type="button" value="Bw2" style="width: 16.6%; left: 83.3%;" onclick="move(this.value)"
+                    class="btn">
+            </div>
+            <div class="bar" style="left: 2%; top: 67.5%;">
+                <div class="top_bar"><span class="top_span">(非正式用法)M</span></div>
+                <input type="button" value="M" style="width: 33.3%; left: 0%;" onclick="move(this.value)" class="btn">
+                <input type="button" value="M'" style="width: 33.3%; left: 33.3%;" onclick="move(this.value)"
+                    class="btn">
+                <input type="button" value="M2" style="width: 33.3%; left: 66.6%;" onclick="move(this.value)"
+                    class="btn">
+            </div>
+            <div class="bar" style="left: 2%; top: 78.5%;">
+                <div class="top_bar"><span class="top_span">(非正式用法)S</span></div>
+                <input type="button" value="S" style="width: 33.3%; left: 0%;" onclick="move(this.value)" class="btn">
+                <input type="button" value="S'" style="width: 33.3%; left: 33.3%;" onclick="move(this.value)"
+                    class="btn">
+                <input type="button" value="S2" style="width: 33.3%; left: 66.6%;" onclick="move(this.value)"
+                    class="btn">
+            </div>
+            <div class="bar" style="left: 2%; top: 89.5%;">
+                <div class="top_bar"><span class="top_span">(非正式用法)E</span></div>
+                <input type="button" value="E" style="width: 33.3%; left: 0%;" onclick="move(this.value)" class="btn">
+                <input type="button" value="E'" style="width: 33.3%; left: 33.3%;" onclick="move(this.value)"
+                    class="btn">
+                <input type="button" value="E2" style="width: 33.3%; left: 66.6%;" onclick="move(this.value)"
+                    class="btn">
+            </div>
+
+            <div class="bar" style="right: 2%; top: 1.5%;">
+                <div class="top_bar"><span class="top_span">(方塊旋轉)x</span></div>
+                <input type="button" value="x" style="width: 33.3%; left: 0%;" onclick="move(this.value)" class="btn">
+                <input type="button" value="x'" style="width: 33.3%; left: 33.3%;" onclick="move(this.value)"
+                    class="btn">
+                <input type="button" value="x2" style="width: 33.3%; left: 66.6%;" onclick="move(this.value)"
+                    class="btn">
+            </div>
+            <div class="bar" style="right: 2%; top: 12.5%;">
+                <div class="top_bar"><span class="top_span">(方塊旋轉)y</span></div>
+                <input type="button" value="y" style="width: 33.3%; left: 0%;" onclick="move(this.value)" class="btn">
+                <input type="button" value="y'" style="width: 33.3%; left: 33.3%;" onclick="move(this.value)"
+                    class="btn">
+                <input type="button" value="y2" style="width: 33.3%; left: 66.6%;" onclick="move(this.value)"
+                    class="btn">
+            </div>
+            <div class="bar" style="right: 2%; top: 23.5%;">
+                <div class="top_bar"><span class="top_span">(方塊旋轉)z</span></div>
+                <input type="button" value="z" style="width: 33.3%; left: 0%;" onclick="move(this.value)" class="btn">
+                <input type="button" value="z'" style="width: 33.3%; left: 33.3%;" onclick="move(this.value)"
+                    class="btn">
+                <input type="button" value="z2" style="width: 33.3%; left: 66.6%;" onclick="move(this.value)"
+                    class="btn">
+            </div>
+
+            <div class="bar2" style="right: 2%; top: 35.5%;">
+                <div class="top_bar2"><span class="top_span">F2L</span></div>
+                <div class="down_bar">
+                    <div class="down_bar1">
+                        <div class="btn1" style="left: 0px;" onclick="move_formula(0,1)"><img class="btn2" id="F2L 1">
+                        </div>
+                        <div class="btn1" style="left: 60px;" onclick="move_formula(0,2)"><img class="btn2" id="F2L 2">
+                        </div>
+                        <div class="btn1" style="left: 120px;" onclick="move_formula(0,3)"><img class="btn2" id="F2L 3">
+                        </div>
+                        <div class="btn1" style="left: 180px;" onclick="move_formula(0,4)"><img class="btn2" id="F2L 4">
+                        </div>
+                        <div class="btn1" style="left: 240px;" onclick="move_formula(0,5)"><img class="btn2" id="F2L 5">
+                        </div>
+                        <div class="btn1" style="left: 300px;" onclick="move_formula(0,6)"><img class="btn2" id="F2L 6">
+                        </div>
+                        <div class="btn1" style="left: 360px;" onclick="move_formula(0,7)"><img class="btn2" id="F2L 7">
+                        </div>
+                        <div class="btn1" style="left: 420px;" onclick="move_formula(0,8)"><img class="btn2" id="F2L 8">
+                        </div>
+                        <div class="btn1" style="left: 480px;" onclick="move_formula(0,9)"><img class="btn2" id="F2L 9">
+                        </div>
+                        <div class="btn1" style="left: 540px;" onclick="move_formula(0,10)"><img class="btn2"
+                                id="F2L 10"></div>
+                        <div class="btn1" style="left: 600px;" onclick="move_formula(0,11)"><img class="btn2"
+                                id="F2L 11"></div>
+                        <div class="btn1" style="left: 660px;" onclick="move_formula(0,12)"><img class="btn2"
+                                id="F2L 12"></div>
+                        <div class="btn1" style="left: 720px;" onclick="move_formula(0,13)"><img class="btn2"
+                                id="F2L 13"></div>
+                        <div class="btn1" style="left: 780px;" onclick="move_formula(0,14)"><img class="btn2"
+                                id="F2L 14"></div>
+                        <div class="btn1" style="left: 840px;" onclick="move_formula(0,15)"><img class="btn2"
+                                id="F2L 15"></div>
+                        <div class="btn1" style="left: 900px;" onclick="move_formula(0,16)"><img class="btn2"
+                                id="F2L 16"></div>
+                        <div class="btn1" style="left: 960px;" onclick="move_formula(0,17)"><img class="btn2"
+                                id="F2L 17"></div>
+                        <div class="btn1" style="left: 1020px;" onclick="move_formula(0,18)"><img class="btn2"
+                                id="F2L 18"></div>
+                        <div class="btn1" style="left: 1080px;" onclick="move_formula(0,19)"><img class="btn2"
+                                id="F2L 19"></div>
+                        <div class="btn1" style="left: 1140px;" onclick="move_formula(0,20)"><img class="btn2"
+                                id="F2L 20"></div>
+                        <div class="btn1" style="left: 1200px;" onclick="move_formula(0,21)"><img class="btn2"
+                                id="F2L 21"></div>
+                        <div class="btn1" style="left: 1260px;" onclick="move_formula(0,22)"><img class="btn2"
+                                id="F2L 22"></div>
+                        <div class="btn1" style="left: 1320px;" onclick="move_formula(0,23)"><img class="btn2"
+                                id="F2L 23"></div>
+                        <div class="btn1" style="left: 1380px;" onclick="move_formula(0,24)"><img class="btn2"
+                                id="F2L 24"></div>
+                        <div class="btn1" style="left: 1440px;" onclick="move_formula(0,25)"><img class="btn2"
+                                id="F2L 25"></div>
+                        <div class="btn1" style="left: 1500px;" onclick="move_formula(0,26)"><img class="btn2"
+                                id="F2L 26"></div>
+                        <div class="btn1" style="left: 1560px;" onclick="move_formula(0,27)"><img class="btn2"
+                                id="F2L 27"></div>
+                        <div class="btn1" style="left: 1620px;" onclick="move_formula(0,28)"><img class="btn2"
+                                id="F2L 28"></div>
+                        <div class="btn1" style="left: 1680px;" onclick="move_formula(0,29)"><img class="btn2"
+                                id="F2L 29"></div>
+                        <div class="btn1" style="left: 1740px;" onclick="move_formula(0,30)"><img class="btn2"
+                                id="F2L 30"></div>
+                        <div class="btn1" style="left: 1800px;" onclick="move_formula(0,31)"><img class="btn2"
+                                id="F2L 31"></div>
+                        <div class="btn1" style="left: 1860px;" onclick="move_formula(0,32)"><img class="btn2"
+                                id="F2L 32"></div>
+                        <div class="btn1" style="left: 1920px;" onclick="move_formula(0,33)"><img class="btn2"
+                                id="F2L 33"></div>
+                        <div class="btn1" style="left: 1980px;" onclick="move_formula(0,34)"><img class="btn2"
+                                id="F2L 34"></div>
+                        <div class="btn1" style="left: 2040px;" onclick="move_formula(0,35)"><img class="btn2"
+                                id="F2L 35"></div>
+                        <div class="btn1" style="left: 2100px;" onclick="move_formula(0,36)"><img class="btn2"
+                                id="F2L 36"></div>
+                        <div class="btn1" style="left: 2160px;" onclick="move_formula(0,37)"><img class="btn2"
+                                id="F2L 37"></div>
+                        <div class="btn1" style="left: 2220px;" onclick="move_formula(0,38)"><img class="btn2"
+                                id="F2L 38"></div>
+                        <div class="btn1" style="left: 2280px;" onclick="move_formula(0,39)"><img class="btn2"
+                                id="F2L 39"></div>
+                        <div class="btn1" style="left: 2340px;" onclick="move_formula(0,40)"><img class="btn2"
+                                id="F2L 40"></div>
+                        <div class="btn1" style="left: 2400px;" onclick="move_formula(0,41)"><img class="btn2"
+                                id="F2L 41"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="bar2" style="right: 2%; top: 53.5%;">
+                <div class="top_bar2"><span class="top_span">OLL</span></div>
+                <div class="down_bar">
+                    <div class="down_bar1">
+                        <div class="btn1" style="left: 0px;" onclick="move_formula(1,1)"><img class="btn2" id="OLL 1">
+                        </div>
+                        <div class="btn1" style="left: 60px;" onclick="move_formula(1,2)"><img class="btn2" id="OLL 2">
+                        </div>
+                        <div class="btn1" style="left: 120px;" onclick="move_formula(1,3)"><img class="btn2" id="OLL 3">
+                        </div>
+                        <div class="btn1" style="left: 180px;" onclick="move_formula(1,4)"><img class="btn2" id="OLL 4">
+                        </div>
+                        <div class="btn1" style="left: 240px;" onclick="move_formula(1,5)"><img class="btn2" id="OLL 5">
+                        </div>
+                        <div class="btn1" style="left: 300px;" onclick="move_formula(1,6)"><img class="btn2" id="OLL 6">
+                        </div>
+                        <div class="btn1" style="left: 360px;" onclick="move_formula(1,7)"><img class="btn2" id="OLL 7">
+                        </div>
+                        <div class="btn1" style="left: 420px;" onclick="move_formula(1,8)"><img class="btn2" id="OLL 8">
+                        </div>
+                        <div class="btn1" style="left: 480px;" onclick="move_formula(1,9)"><img class="btn2" id="OLL 9">
+                        </div>
+                        <div class="btn1" style="left: 540px;" onclick="move_formula(1,10)"><img class="btn2"
+                                id="OLL 10"></div>
+                        <div class="btn1" style="left: 600px;" onclick="move_formula(1,11)"><img class="btn2"
+                                id="OLL 11"></div>
+                        <div class="btn1" style="left: 660px;" onclick="move_formula(1,12)"><img class="btn2"
+                                id="OLL 12"></div>
+                        <div class="btn1" style="left: 720px;" onclick="move_formula(1,13)"><img class="btn2"
+                                id="OLL 13"></div>
+                        <div class="btn1" style="left: 780px;" onclick="move_formula(1,14)"><img class="btn2"
+                                id="OLL 14"></div>
+                        <div class="btn1" style="left: 840px;" onclick="move_formula(1,15)"><img class="btn2"
+                                id="OLL 15"></div>
+                        <div class="btn1" style="left: 900px;" onclick="move_formula(1,16)"><img class="btn2"
+                                id="OLL 16"></div>
+                        <div class="btn1" style="left: 960px;" onclick="move_formula(1,17)"><img class="btn2"
+                                id="OLL 17"></div>
+                        <div class="btn1" style="left: 1020px;" onclick="move_formula(1,18)"><img class="btn2"
+                                id="OLL 18"></div>
+                        <div class="btn1" style="left: 1080px;" onclick="move_formula(1,19)"><img class="btn2"
+                                id="OLL 19"></div>
+                        <div class="btn1" style="left: 1140px;" onclick="move_formula(1,20)"><img class="btn2"
+                                id="OLL 20"></div>
+                        <div class="btn1" style="left: 1200px;" onclick="move_formula(1,21)"><img class="btn2"
+                                id="OLL 21"></div>
+                        <div class="btn1" style="left: 1260px;" onclick="move_formula(1,22)"><img class="btn2"
+                                id="OLL 22"></div>
+                        <div class="btn1" style="left: 1320px;" onclick="move_formula(1,23)"><img class="btn2"
+                                id="OLL 23"></div>
+                        <div class="btn1" style="left: 1380px;" onclick="move_formula(1,24)"><img class="btn2"
+                                id="OLL 24"></div>
+                        <div class="btn1" style="left: 1440px;" onclick="move_formula(1,25)"><img class="btn2"
+                                id="OLL 25"></div>
+                        <div class="btn1" style="left: 1500px;" onclick="move_formula(1,26)"><img class="btn2"
+                                id="OLL 26"></div>
+                        <div class="btn1" style="left: 1560px;" onclick="move_formula(1,27)"><img class="btn2"
+                                id="OLL 27"></div>
+                        <div class="btn1" style="left: 1620px;" onclick="move_formula(1,28)"><img class="btn2"
+                                id="OLL 28"></div>
+                        <div class="btn1" style="left: 1680px;" onclick="move_formula(1,29)"><img class="btn2"
+                                id="OLL 29"></div>
+                        <div class="btn1" style="left: 1740px;" onclick="move_formula(1,30)"><img class="btn2"
+                                id="OLL 30"></div>
+                        <div class="btn1" style="left: 1800px;" onclick="move_formula(1,31)"><img class="btn2"
+                                id="OLL 31"></div>
+                        <div class="btn1" style="left: 1860px;" onclick="move_formula(1,32)"><img class="btn2"
+                                id="OLL 32"></div>
+                        <div class="btn1" style="left: 1920px;" onclick="move_formula(1,33)"><img class="btn2"
+                                id="OLL 33"></div>
+                        <div class="btn1" style="left: 1980px;" onclick="move_formula(1,34)"><img class="btn2"
+                                id="OLL 34"></div>
+                        <div class="btn1" style="left: 2040px;" onclick="move_formula(1,35)"><img class="btn2"
+                                id="OLL 35"></div>
+                        <div class="btn1" style="left: 2100px;" onclick="move_formula(1,36)"><img class="btn2"
+                                id="OLL 36"></div>
+                        <div class="btn1" style="left: 2160px;" onclick="move_formula(1,37)"><img class="btn2"
+                                id="OLL 37"></div>
+                        <div class="btn1" style="left: 2220px;" onclick="move_formula(1,38)"><img class="btn2"
+                                id="OLL 38"></div>
+                        <div class="btn1" style="left: 2280px;" onclick="move_formula(1,39)"><img class="btn2"
+                                id="OLL 39"></div>
+                        <div class="btn1" style="left: 2340px;" onclick="move_formula(1,40)"><img class="btn2"
+                                id="OLL 40"></div>
+                        <div class="btn1" style="left: 2400px;" onclick="move_formula(1,41)"><img class="btn2"
+                                id="OLL 41"></div>
+                        <div class="btn1" style="left: 2460px;" onclick="move_formula(1,42)"><img class="btn2"
+                                id="OLL 42"></div>
+                        <div class="btn1" style="left: 2520px;" onclick="move_formula(1,43)"><img class="btn2"
+                                id="OLL 43"></div>
+                        <div class="btn1" style="left: 2580px;" onclick="move_formula(1,44)"><img class="btn2"
+                                id="OLL 44"></div>
+                        <div class="btn1" style="left: 2640px;" onclick="move_formula(1,45)"><img class="btn2"
+                                id="OLL 45"></div>
+                        <div class="btn1" style="left: 2700px;" onclick="move_formula(1,46)"><img class="btn2"
+                                id="OLL 46"></div>
+                        <div class="btn1" style="left: 2760px;" onclick="move_formula(1,47)"><img class="btn2"
+                                id="OLL 47"></div>
+                        <div class="btn1" style="left: 2820px;" onclick="move_formula(1,48)"><img class="btn2"
+                                id="OLL 48"></div>
+                        <div class="btn1" style="left: 2880px;" onclick="move_formula(1,49)"><img class="btn2"
+                                id="OLL 49"></div>
+                        <div class="btn1" style="left: 2940px;" onclick="move_formula(1,50)"><img class="btn2"
+                                id="OLL 50"></div>
+                        <div class="btn1" style="left: 3000px;" onclick="move_formula(1,51)"><img class="btn2"
+                                id="OLL 51"></div>
+                        <div class="btn1" style="left: 3060px;" onclick="move_formula(1,52)"><img class="btn2"
+                                id="OLL 52"></div>
+                        <div class="btn1" style="left: 3120px;" onclick="move_formula(1,53)"><img class="btn2"
+                                id="OLL 53"></div>
+                        <div class="btn1" style="left: 3180px;" onclick="move_formula(1,54)"><img class="btn2"
+                                id="OLL 54"></div>
+                        <div class="btn1" style="left: 3240px;" onclick="move_formula(1,55)"><img class="btn2"
+                                id="OLL 55"></div>
+                        <div class="btn1" style="left: 3300px;" onclick="move_formula(1,56)"><img class="btn2"
+                                id="OLL 56"></div>
+                        <div class="btn1" style="left: 3360px;" onclick="move_formula(1,57)"><img class="btn2"
+                                id="OLL 57"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="bar2" style="right: 2%; top: 71.5%;">
+                <div class="top_bar2"><span class="top_span">PLL</span></div>
+                <div class="down_bar">
+                    <div class="down_bar1">
+                        <div class="btn1" style="left: 0px;" onclick="move_formula(2,1)"><img class="btn2" id="PLL 1">
+                        </div>
+                        <div class="btn1" style="left: 60px;" onclick="move_formula(2,2)"><img class="btn2" id="PLL 2">
+                        </div>
+                        <div class="btn1" style="left: 120px;" onclick="move_formula(2,3)"><img class="btn2" id="PLL 3">
+                        </div>
+                        <div class="btn1" style="left: 180px;" onclick="move_formula(2,4)"><img class="btn2" id="PLL 4">
+                        </div>
+                        <div class="btn1" style="left: 240px;" onclick="move_formula(2,5)"><img class="btn2" id="PLL 5">
+                        </div>
+                        <div class="btn1" style="left: 300px;" onclick="move_formula(2,6)"><img class="btn2" id="PLL 6">
+                        </div>
+                        <div class="btn1" style="left: 360px;" onclick="move_formula(2,7)"><img class="btn2" id="PLL 7">
+                        </div>
+                        <div class="btn1" style="left: 420px;" onclick="move_formula(2,8)"><img class="btn2" id="PLL 8">
+                        </div>
+                        <div class="btn1" style="left: 480px;" onclick="move_formula(2,9)"><img class="btn2" id="PLL 9">
+                        </div>
+                        <div class="btn1" style="left: 540px;" onclick="move_formula(2,10)"><img class="btn2"
+                                id="PLL 10"></div>
+                        <div class="btn1" style="left: 600px;" onclick="move_formula(2,11)"><img class="btn2"
+                                id="PLL 11"></div>
+                        <div class="btn1" style="left: 660px;" onclick="move_formula(2,12)"><img class="btn2"
+                                id="PLL 12"></div>
+                        <div class="btn1" style="left: 720px;" onclick="move_formula(2,13)"><img class="btn2"
+                                id="PLL 13"></div>
+                        <div class="btn1" style="left: 780px;" onclick="move_formula(2,14)"><img class="btn2"
+                                id="PLL 14"></div>
+                        <div class="btn1" style="left: 840px;" onclick="move_formula(2,15)"><img class="btn2"
+                                id="PLL 15"></div>
+                        <div class="btn1" style="left: 900px;" onclick="move_formula(2,16)"><img class="btn2"
+                                id="PLL 16"></div>
+                        <div class="btn1" style="left: 960px;" onclick="move_formula(2,17)"><img class="btn2"
+                                id="PLL 17"></div>
+                        <div class="btn1" style="left: 1020px;" onclick="move_formula(2,18)"><img class="btn2"
+                                id="PLL 18"></div>
+                        <div class="btn1" style="left: 1080px;" onclick="move_formula(2,19)"><img class="btn2"
+                                id="PLL 19"></div>
+                        <div class="btn1" style="left: 1140px;" onclick="move_formula(2,20)"><img class="btn2"
+                                id="PLL 20"></div>
+                        <div class="btn1" style="left: 1200px;" onclick="move_formula(2,21)"><img class="btn2"
+                                id="PLL 21"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="bar" style="right: 2%; top: 89.5%;">
+                <div class="top_bar"><span class="top_span">動畫速度</span></div>
+                <div style="position: absolute; width: 100%; height: 50%; bottom: 0%;">
+                    <span class="speed_span" style="text-align: left;">慢</span>
+                    <span class="speed_span" style="text-align: right;">快</span>
+                    <input type="range" id="speed_range" min="0.5" max="10" value="4" step="0.1" oninput="change_speed()">
+                </div>
+            </div>
+            <input type="button" value="隨機打亂" id="random" onclick="random_move()">
+            <input type="button" value="復原" id="recovery" onclick="recovery()">
+            <div id="hint_bar" style="display: none;">
+                <span id="hint_span"></span>
+            </div>
+            <div id="action_bar" style="display: none;">
+                <input type="button" value="▶️開始" id="start" onclick="start()"> <!-- ⏸️暫停 -->
+                <input type="button" value="⏩下一步" id="next" onclick="next()">
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
